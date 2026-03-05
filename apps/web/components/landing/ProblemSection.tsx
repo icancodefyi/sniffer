@@ -22,7 +22,7 @@ const PROBLEMS = [
 export function ProblemSection() {
   return (
     <section className="w-full bg-white py-32">
-      <div className="mx-auto max-w-7xl px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8">
 
         {/* Header — left-aligned with a right pull-quote stat for visual weight */}
         <div className="mb-20 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
@@ -31,7 +31,7 @@ export function ProblemSection() {
               The Problem
             </p>
             <h2
-              className="font-serif text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
+              className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
               style={{ maxWidth: "520px" }}
             >
               Manipulation is easy.<br />Verification is not.

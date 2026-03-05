@@ -119,7 +119,7 @@ export default function ReportPage() {
         </Link>
         <span className="text-[#d4cfc9]">/</span>
         <span className="text-[13px] text-[#9ca3af]">Forensic Report</span>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto hidden sm:flex items-center gap-2">
           <button
             onClick={copyHash}
             className="text-[12px] text-[#6b7280] hover:text-[#0a0a0a] border border-[#e8e4de] px-3 py-1.5 rounded-lg transition-colors"
@@ -140,7 +140,7 @@ export default function ReportPage() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-10 print:py-6 print:px-10">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 print:py-6 print:px-10">
 
         <CaseHeader
           caseRef={caseRef}

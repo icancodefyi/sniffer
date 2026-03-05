@@ -3,7 +3,7 @@ import Link from "next/link";
 export function CTASection() {
   return (
     <section className="w-full bg-[#0a0a0a] py-32">
-      <div className="mx-auto flex max-w-7xl flex-col items-center px-8 text-center">
+      <div className="mx-auto flex max-w-7xl flex-col items-center px-4 sm:px-8 text-center">
 
         {/* Eyebrow */}
         <p className="mb-7 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4b4742]">
@@ -12,7 +12,7 @@ export function CTASection() {
 
         {/* Headline */}
         <h2
-          className="mb-7 font-serif text-5xl font-normal leading-[1.1] tracking-tight text-white"
+          className="mb-7 font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-white"
           style={{ maxWidth: "640px" }}
         >
           Your image deserves<br />a forensic answer.

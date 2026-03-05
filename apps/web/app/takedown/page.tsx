@@ -103,7 +103,7 @@ export default function TakedownPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-12">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
         {/* Page header */}
         <div className="mb-10">
           <div className="flex items-center gap-2.5 mb-4">
@@ -250,7 +250,7 @@ export default function TakedownPage() {
                 )}
               </div>
               <div className="bg-white px-5 py-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Image Hash</p>
                     <p className="font-mono text-[10.5px] text-[#374151] break-all">{result.file_hash.slice(0, 20)}…{result.file_hash.slice(-8)}</p>

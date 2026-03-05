@@ -155,7 +155,7 @@ function UploadContent() {
 
       {phase === "analyzing" && <AnalysisOverlay step={analysisStep} steps={ANALYSIS_STEPS} />}
 
-      <main className="max-w-2xl mx-auto px-6 py-12">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
         {/* Phase 1: Upload suspicious image */}
         {phase === "suspicious" && (
           <div>

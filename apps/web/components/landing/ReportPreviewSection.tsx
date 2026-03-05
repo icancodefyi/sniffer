@@ -13,7 +13,7 @@ const flagCount = LAYERS.filter((l) => l.flag).length;
 export function ReportPreviewSection() {
   return (
     <section className="w-full bg-[#fafaf8] py-32">
-      <div className="mx-auto max-w-7xl px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8">
 
         <div className="grid grid-cols-1 items-start gap-20 lg:grid-cols-[1fr_500px]">
 
@@ -23,7 +23,7 @@ export function ReportPreviewSection() {
               Evidence Output
             </p>
             <h2
-              className="mb-6 font-serif text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
+              className="mb-6 font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
               style={{ maxWidth: "440px" }}
             >
               Every case produces a signed forensic record.

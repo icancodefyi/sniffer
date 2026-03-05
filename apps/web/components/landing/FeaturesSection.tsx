@@ -34,14 +34,14 @@ const FEATURES = [
 export function FeaturesSection() {
   return (
     <section id="features" className="w-full bg-white py-32">
-      <div className="mx-auto max-w-7xl px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8">
 
         <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a8a29e]">
           Analysis Capabilities
         </p>
         <div className="mb-20 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <h2
-            className="font-serif text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
+            className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
             style={{ maxWidth: "480px" }}
           >
             Six independent layers.<br />One verdict.

@@ -25,9 +25,9 @@ export function ArticleCard({ post, index, featured }: ArticleCardProps) {
         className="group block py-12"
         style={{ borderBottom: "1px solid #e8e4de" }}
       >
-        <div className="flex gap-10 items-start">
-          {/* Big number */}
-          <div className="shrink-0 pt-1">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-10 items-start">
+          {/* Big number - hidden on mobile */}
+          <div className="hidden sm:block shrink-0 pt-1">
             <span
               className="font-mono font-light leading-none select-none"
               style={{ fontSize: "5.5rem", color: "#e8e4de", lineHeight: 1 }}
@@ -118,7 +118,7 @@ export function ArticleCard({ post, index, featured }: ArticleCardProps) {
   return (
     <Link
       href={`/resources/${post.slug}`}
-      className="group flex gap-8 items-start py-8 transition-colors"
+            className="group flex gap-4 sm:gap-8 items-start py-8 transition-colors"
       style={{ borderBottom: "1px solid #e8e4de" }}
     >
       {/* Index number */}
@@ -186,8 +186,8 @@ export function ArticleCard({ post, index, featured }: ArticleCardProps) {
         </div>
       </div>
 
-      {/* Date + arrow */}
-      <div className="shrink-0 flex flex-col items-end justify-between gap-6 pt-0.5">
+      {/* Date + arrow - hidden on mobile */}
+      <div className="hidden sm:flex shrink-0 flex-col items-end justify-between gap-6 pt-0.5">
         <span
           className="text-[11px] font-mono uppercase tracking-wider whitespace-nowrap"
           style={{ color: "#b0a89e" }}

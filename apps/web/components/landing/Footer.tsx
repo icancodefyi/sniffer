@@ -33,7 +33,7 @@ const NAV = [
 export function Footer() {
   return (
     <footer className="w-full border-t border-[#1a1a1a] bg-[#0a0a0a]">
-      <div className="mx-auto max-w-7xl px-8 py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8 py-16">
         {/* Top row: logo + nav columns */}
         <div className="grid grid-cols-2 gap-12 md:grid-cols-[1fr_repeat(3,auto)]">
           {/* Brand */}

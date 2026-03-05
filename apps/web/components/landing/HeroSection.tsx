@@ -25,7 +25,7 @@ export function HeroSection() {
       <div className="relative z-10 mx-auto grid min-h-[calc(100svh-64px)] max-w-7xl grid-cols-1 items-center pt-20 pb-20 lg:grid-cols-[1fr_420px]">
 
         {/* Left copy */}
-        <div className="flex flex-col justify-center px-8 py-16 xl:px-16 lg:py-0">
+        <div className="flex flex-col justify-center px-4 sm:px-8 py-16 xl:px-16 lg:py-0">
 
           {/* Ornament */}
           <div aria-hidden="true" className="mb-6 flex items-center gap-3 opacity-50">
@@ -48,7 +48,7 @@ export function HeroSection() {
           </div>
 
           {/* H1 — font-serif maps to Georgia; text-5xl (48px) guarantees 2 lines in this column */}
-          <h1 className="mb-5 font-serif text-5xl font-medium leading-[1.1] tracking-tight text-[#0a0a0a]">
+          <h1 className="mb-5 font-serif text-3xl sm:text-4xl md:text-5xl font-medium leading-[1.1] tracking-tight text-[#0a0a0a]">
             Verify Manipulated Images.
             <br />
             Protect Your Digital Identity.
@@ -115,10 +115,10 @@ export function HeroSection() {
 
       {/* Stats strip */}
       <div className="relative z-10 border-t border-[#f0ece6] bg-[#fafaf9]">
-        <dl className="mx-auto grid max-w-7xl grid-cols-3 divide-x divide-[#f0ece6]">
+        <dl className="mx-auto grid max-w-7xl grid-cols-3 divide-x divide-[#f0ece6] px-0">
           {STATS.map((s) => (
-            <div key={s.label} className="px-8 py-6 text-center">
-              <dt className="mb-0.5 text-xl font-semibold tracking-tight text-[#0a0a0a]">
+            <div key={s.label} className="px-3 sm:px-8 py-5 sm:py-6 text-center">
+              <dt className="mb-0.5 text-lg sm:text-xl font-semibold tracking-tight text-[#0a0a0a]">
                 {s.value}
               </dt>
               <dd className="text-xs text-[#9ca3af]">{s.label}</dd>

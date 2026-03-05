@@ -15,11 +15,11 @@ export default function ResourcesPage() {
     <div className="min-h-screen" style={{ background: "#fafaf8" }}>
       <Navbar />
 
-      <div className="px-8" style={{ maxWidth: "1100px", margin: "0 auto" }}>
+      <div className="px-4 sm:px-8" style={{ maxWidth: "1100px", margin: "0 auto" }}>
         {/* Masthead */}
         <div className="pt-32 pb-0">
           <div
-            className="flex items-end justify-between pb-6"
+            className="flex flex-wrap items-end justify-between pb-6 gap-4"
             style={{ borderBottom: "2px solid #0a0a0a" }}
           >
             <div>
@@ -86,7 +86,7 @@ export default function ResourcesPage() {
       </div>
 
       <footer
-        className="px-8 py-8 border-t"
+        className="px-4 sm:px-8 py-8 border-t"
         style={{
           borderColor: "#e8e4de",
           maxWidth: "1100px",

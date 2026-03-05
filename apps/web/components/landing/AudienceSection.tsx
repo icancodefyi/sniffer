@@ -100,7 +100,7 @@ const TRUST_MARKS = [
 export function AudienceSection() {
   return (
     <section className="w-full bg-[#fafaf8] py-32">
-      <div className="mx-auto max-w-7xl px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8">
 
         {/* Header */}
         <div className="mb-20 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
@@ -109,7 +109,7 @@ export function AudienceSection() {
               Who is Sniffer for?
             </p>
             <h2
-              className="font-serif text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
+              className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
               style={{ maxWidth: "480px" }}
             >
               Built for everyone<br />who needs the truth.

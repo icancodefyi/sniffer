@@ -108,7 +108,7 @@ export default function ProtectPage() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-12">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
 
         {/* Page header */}
         <div className="mb-10">
@@ -129,7 +129,7 @@ export default function ProtectPage() {
         </div>
 
         {/* How it works — compact strip */}
-        <div className="grid grid-cols-3 gap-3 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
           {[
             { step: "01", title: "Upload Original", body: "We compute a SHA-256 hash and perceptual fingerprint from your image bytes." },
             { step: "02", title: "Fingerprint Stored", body: "Your hash is stored in the registry. No image is kept — only the cryptographic proof." },

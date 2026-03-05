@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import type { CaseData, AnalysisResult } from "@/components/report/types";
-import { buildCaseRef, buildSignalRows, buildTimeline, TAKEDOWN_GUIDES } from "@/components/report/utils";
+import {
+  buildCaseRef,
+  buildSignalRows,
+  buildTimeline,
+  buildVerdict,
+  buildVerdictColor,
+  TAKEDOWN_GUIDES,
+} from "@/components/report/utils";
 import { CaseHeader } from "@/components/report/CaseHeader";
 import { ScoreGauge } from "@/components/report/ScoreGauge";
 import { ImageEvidence } from "@/components/report/ImageEvidence";
@@ -12,6 +19,9 @@ import { ForensicSignals } from "@/components/report/ForensicSignals";
 import { EvidenceMetadata } from "@/components/report/EvidenceMetadata";
 import { EvidenceTimeline } from "@/components/report/EvidenceTimeline";
 import { TakedownGuidance } from "@/components/report/TakedownGuidance";
+import { TamperHeatmap } from "@/components/report/TamperHeatmap";
+import { AuditTrail } from "@/components/report/AuditTrail";
+import { C2PAProvenance } from "@/components/report/C2PAProvenance";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -89,14 +99,8 @@ export default function ReportPage() {
   }
 
   const score = analysis.authenticity_score;
-  const isHigh = score >= 70;
-  const isMed = score >= 40 && score < 70;
-  const verdict = isHigh ? "LIKELY AUTHENTIC" : isMed ? "INCONCLUSIVE" : "MANIPULATED";
-  const verdictColor = isHigh
-    ? "text-green-700 bg-green-50 border-green-200"
-    : isMed
-    ? "text-amber-700 bg-amber-50 border-amber-200"
-    : "text-red-700 bg-red-50 border-red-200";
+  const verdict = buildVerdict(analysis);
+  const verdictColor = buildVerdictColor(analysis);
 
   const caseRef = buildCaseRef(caseId);
   const signalRows = buildSignalRows(analysis);
@@ -138,7 +142,14 @@ export default function ReportPage() {
 
       <main className="max-w-3xl mx-auto px-6 py-10 print:py-6 print:px-10">
 
-        <CaseHeader caseRef={caseRef} verdict={verdict} verdictColor={verdictColor} caseData={caseData} />
+        <CaseHeader
+          caseRef={caseRef}
+          verdict={verdict}
+          verdictColor={verdictColor}
+          caseData={caseData}
+          forensicCertainty={analysis.forensic_certainty}
+          tamperRegionCount={analysis.tamper_regions?.length}
+        />
 
         {/* ── Score + Images ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -148,16 +159,29 @@ export default function ReportPage() {
             <p className="text-[12.5px] text-[#6b7280] mt-4 leading-relaxed">{analysis.explanation}</p>
           </div>
 
-          <ImageEvidence suspiciousImg={suspiciousImg} referenceImg={referenceImg} />
+          <ImageEvidence
+            suspiciousImg={suspiciousImg}
+            referenceImg={referenceImg}
+            tamperHeatmap={analysis.tamper_heatmap}
+          />
         </div>
 
         <ForensicSignals rows={signalRows} />
+
+        <TamperHeatmap
+          elaHeatmap={analysis.ela_heatmap}
+          tamperRegions={analysis.tamper_regions}
+        />
+
+        <C2PAProvenance c2pa={analysis.c2pa_result} />
 
         <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
 
         <EvidenceTimeline entries={timeline} />
 
         {takedownSteps && <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />}
+
+        {analysis.audit && <AuditTrail audit={analysis.audit} />}
 
         {/* ── Footer strip ── */}
         <div className="border-t border-[#e8e4de] pt-6 flex items-center justify-between print:border-[#0a0a0a]">

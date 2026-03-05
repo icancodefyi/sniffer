@@ -61,6 +61,17 @@ export interface SignalRow {
 }
 
 export function buildSignalRows(analysis: AnalysisResult): SignalRow[] {
+  // Use rich per-algorithm signals from the full pipeline when available
+  if (analysis.algorithm_signals && analysis.algorithm_signals.length > 0) {
+    return analysis.algorithm_signals.map((sig) => ({
+      label: sig.name,
+      value: sig.value,
+      note: `Weight: ${Math.round(sig.weight * 100)}%`,
+      flagged: sig.flagged,
+    }));
+  }
+
+  // Fallback: legacy derived-from-score signals (backward compat)
   const signals = analysis.signals;
   return [
     {
@@ -117,6 +128,31 @@ export function buildSignalRows(analysis: AnalysisResult): SignalRow[] {
   ];
 }
 
+export function buildVerdict(analysis: AnalysisResult): string {
+  if (analysis.forensic_certainty) return analysis.forensic_certainty.toUpperCase();
+  const score = analysis.authenticity_score;
+  if (score >= 70) return "LIKELY AUTHENTIC";
+  if (score >= 40) return "INCONCLUSIVE";
+  return "MANIPULATED";
+}
+
+export function buildVerdictColor(analysis: AnalysisResult): string {
+  const cert = analysis.forensic_certainty ?? "";
+  if (cert.includes("Verified Authentic") || cert.includes("Likely Authentic"))
+    return "text-green-700 bg-green-50 border-green-200";
+  if (cert.includes("Near Certain") || cert.includes("Highly Probable"))
+    return "text-red-800 bg-red-50 border-red-300";
+  if (cert.includes("Probable"))
+    return "text-orange-700 bg-orange-50 border-orange-200";
+  if (cert.includes("Inconclusive"))
+    return "text-amber-700 bg-amber-50 border-amber-200";
+  // Fallback to score
+  const score = analysis.authenticity_score;
+  if (score >= 70) return "text-green-700 bg-green-50 border-green-200";
+  if (score >= 40) return "text-amber-700 bg-amber-50 border-amber-200";
+  return "text-red-700 bg-red-50 border-red-200";
+}
+
 export interface TimelineEntry {
   ts: number;
   event: string;
@@ -132,12 +168,28 @@ export function buildTimeline(analysis: AnalysisResult, caseRef: string): Timeli
       event: "Image uploaded",
       detail: `${(file_size / 1024).toFixed(0)} KB \u00b7 ${mime_type.split("/")[1].toUpperCase()}`,
     },
-    { ts: t - 50, event: "Forensic scan initiated", detail: "7-layer analysis pipeline started" },
+    {
+      ts: t - 50,
+      event: "Forensic scan initiated",
+      detail: `${analysis.audit?.algorithms_run?.length ?? analysis.algorithm_signals?.length ?? 7}-algorithm analysis pipeline started`,
+    },
     {
       ts: t - 12,
       event: "Manipulation signals processed",
-      detail: score < 50 ? "Anomalies detected in analysis layers" : "No significant anomalies found",
+      detail: (() => {
+        const cert = analysis.forensic_certainty ?? "";
+        if (cert.includes("Manipulation")) return "Manipulation signals identified across analysis layers";
+        if (cert === "Inconclusive") return "Mixed signals detected — manual review recommended";
+        if (score < 70) return "Anomalies detected in analysis layers";
+        return "No significant anomalies found";
+      })(),
     },
-    { ts: t, event: "Report generated", detail: `SHA-256: ${file_hash.slice(0, 16)}\u2026` },
+    {
+      ts: t,
+      event: "Report generated",
+      detail: `SHA-256: ${file_hash.slice(0, 16)}\u2026 \u00b7 pipeline v${
+        analysis.audit?.pipeline_version ?? "1.0.0"
+      }`,
+    },
   ];
 }

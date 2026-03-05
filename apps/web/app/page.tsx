@@ -5,6 +5,7 @@ import {
   HowItWorksSection,
   ReportPreviewSection,
   FeaturesSection,
+  AudienceSection,
   CTASection,
   Footer,
 } from "@/components/landing";
@@ -19,6 +20,7 @@ export default function Page() {
         <HowItWorksSection />
         <FeaturesSection />
         <ReportPreviewSection />
+        <AudienceSection />
         <CTASection />
       </main>
       <Footer />

@@ -30,3 +30,4 @@ export function EvidenceMetadata({ analysis, hashCopied, onCopy }: Props) {
     </section>
   );
 }
+

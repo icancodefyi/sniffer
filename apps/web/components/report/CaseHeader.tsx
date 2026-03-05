@@ -6,9 +6,16 @@ interface Props {
   verdict: string;
   verdictColor: string;
   caseData: CaseData;
+  forensicCertainty?: string;
+  tamperRegionCount?: number;
 }
 
-export function CaseHeader({ caseRef, verdict, verdictColor, caseData }: Props) {
+export function CaseHeader({ caseRef, verdict, verdictColor, caseData, forensicCertainty, tamperRegionCount }: Props) {
+  const regionLabel =
+    tamperRegionCount != null && tamperRegionCount > 0
+      ? ` — ${tamperRegionCount} region${tamperRegionCount > 1 ? "s" : ""} identified`
+      : "";
+
   return (
     <div className="border-b border-[#e8e4de] pb-7 mb-8 print:border-[#0a0a0a]">
       <div className="flex items-start justify-between gap-4 mb-5">
@@ -16,11 +23,19 @@ export function CaseHeader({ caseRef, verdict, verdictColor, caseData }: Props) 
           <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-widest mb-1">Case Reference</p>
           <p className="font-mono text-[22px] text-[#0a0a0a] tracking-tight">{caseRef}</p>
         </div>
-        <span
-          className={`px-3 py-1.5 rounded-full border text-[11.5px] font-bold tracking-widest font-mono ${verdictColor}`}
-        >
-          {verdict}
-        </span>
+        <div className="text-right">
+          <span
+            className={`px-3 py-1.5 rounded-full border text-[11.5px] font-bold tracking-widest font-mono ${verdictColor}`}
+          >
+            {verdict}
+          </span>
+          {forensicCertainty && (
+            <p className="text-[11px] text-[#6b7280] mt-1.5 font-mono">
+              {forensicCertainty}
+              {regionLabel}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-x-7 gap-y-3">

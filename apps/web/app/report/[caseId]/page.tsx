@@ -151,39 +151,105 @@ export default function ReportPage() {
           tamperRegionCount={analysis.tamper_regions?.length}
         />
 
-        {/* ── Score + Images ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div>
-            <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Authenticity Analysis</p>
-            <ScoreGauge score={score} />
-            <p className="text-[12.5px] text-[#6b7280] mt-4 leading-relaxed">{analysis.explanation}</p>
-          </div>
+        {analysis.forensic_certainty === "AI-Generated (C2PA Verified)" ? (
+          /* ══════════════════════════════════════════════════════════════════
+             AI-CONFIRMED REPORT LAYOUT
+             Score gauge, forensic signals, and tamper heatmap are suppressed.
+             The C2PA manifest is the only evidence that matters here.
+          ══════════════════════════════════════════════════════════════════ */
+          <>
+            {/* Finding declaration */}
+            <div className="mb-8 rounded-xl overflow-hidden border border-[#e8e4de]">
+              {/* Header bar */}
+              <div className="bg-[#0a0a0a] px-5 py-3 flex items-center gap-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-[0.2em]">Forensic Finding</p>
+                <span className="text-[#3a3a3a] text-[10px] font-mono ml-auto">C2PA-VERIFIED</span>
+              </div>
+              {/* Body */}
+              <div className="bg-white px-5 py-5">
+                <h2 className="text-[20px] font-bold text-[#0a0a0a] tracking-tight mb-2">
+                  AI-Generated Origin
+                </h2>
+                <p className="text-[12.5px] text-[#6b7280] leading-relaxed max-w-prose mb-5">
+                  The provenance manifest embedded in this file declares AI-generated origin.
+                  This declaration is cryptographically signed and tamper-evident — not a heuristic estimate.
+                  The origin platform explicitly asserted the content was produced by a trained AI model.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#e8e4de] bg-[#fafaf8] font-mono text-[10.5px] text-[#374151]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    Signed · {analysis.c2pa_result?.issuer ?? analysis.c2pa_result?.issuer_org ?? "Unknown signer"}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-200 bg-amber-50 font-mono text-[10.5px] text-amber-700">
+                    trainedAlgorithmicMedia
+                  </span>
+                  {analysis.c2pa_result?.generator_tool && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#e8e4de] bg-[#fafaf8] font-mono text-[10.5px] text-[#6b7280]">
+                      {analysis.c2pa_result.generator_tool}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
 
-          <ImageEvidence
-            suspiciousImg={suspiciousImg}
-            referenceImg={referenceImg}
-            tamperHeatmap={analysis.tamper_heatmap}
-          />
-        </div>
+            {/* What the manifest says */}
+            <C2PAProvenance c2pa={analysis.c2pa_result} />
 
-        <ForensicSignals rows={signalRows} />
+            {/* Image + explanation side by side */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div>
+                <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Forensic Summary</p>
+                <p className="text-[12.5px] text-[#6b7280] leading-relaxed">{analysis.explanation}</p>
+              </div>
+              <ImageEvidence
+                suspiciousImg={suspiciousImg}
+                referenceImg={referenceImg}
+                tamperHeatmap={analysis.tamper_heatmap}
+              />
+            </div>
 
-        <TamperHeatmap
-          elaHeatmap={analysis.ela_heatmap}
-          tamperRegions={analysis.tamper_regions}
-        />
+            <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
+            <EvidenceTimeline entries={timeline} />
+            {takedownSteps && <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />}
+            {analysis.audit && <AuditTrail audit={analysis.audit} />}
+          </>
+        ) : (
+          /* ══════════════════════════════════════════════════════════════════
+             STANDARD FORENSIC REPORT LAYOUT
+          ══════════════════════════════════════════════════════════════════ */
+          <>
+            {/* Score + Images */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div>
+                <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Authenticity Analysis</p>
+                <ScoreGauge score={score} />
+                <p className="text-[12.5px] text-[#6b7280] mt-4 leading-relaxed">{analysis.explanation}</p>
+              </div>
+              <ImageEvidence
+                suspiciousImg={suspiciousImg}
+                referenceImg={referenceImg}
+                tamperHeatmap={analysis.tamper_heatmap}
+              />
+            </div>
 
-        <C2PAProvenance c2pa={analysis.c2pa_result} />
+            <ForensicSignals rows={signalRows} />
 
-        <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
+            <TamperHeatmap
+              elaHeatmap={analysis.ela_heatmap}
+              tamperRegions={analysis.tamper_regions}
+            />
 
-        <EvidenceTimeline entries={timeline} />
+            <C2PAProvenance c2pa={analysis.c2pa_result} />
 
-        {takedownSteps && <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />}
+            <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
+            <EvidenceTimeline entries={timeline} />
+            {takedownSteps && <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />}
+            {analysis.audit && <AuditTrail audit={analysis.audit} />}
+          </>
+        )}
 
-        {analysis.audit && <AuditTrail audit={analysis.audit} />}
-
-        {/* ── Footer strip ── */}
+        {/* Footer strip */}
         <div className="border-t border-[#e8e4de] pt-6 flex items-center justify-between print:border-[#0a0a0a]">
           <div>
             <p className="font-mono text-[10px] text-[#a8a29e] tracking-widest">SNIFFER · IMPIC LABS · 2026</p>
@@ -192,10 +258,7 @@ export default function ReportPage() {
             </p>
           </div>
           <div className="flex gap-4 print:hidden">
-            <Link
-              href="/verify"
-              className="text-[12px] text-indigo-600 hover:underline"
-            >
+            <Link href="/verify" className="text-[12px] text-indigo-600 hover:underline">
               New Verification
             </Link>
             <button

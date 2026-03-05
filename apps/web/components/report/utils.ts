@@ -129,6 +129,7 @@ export function buildSignalRows(analysis: AnalysisResult): SignalRow[] {
 }
 
 export function buildVerdict(analysis: AnalysisResult): string {
+  if (analysis.forensic_certainty === "AI-Generated (C2PA Verified)") return "AI GENERATED";
   if (analysis.forensic_certainty) return analysis.forensic_certainty.toUpperCase();
   const score = analysis.authenticity_score;
   if (score >= 70) return "LIKELY AUTHENTIC";
@@ -138,6 +139,8 @@ export function buildVerdict(analysis: AnalysisResult): string {
 
 export function buildVerdictColor(analysis: AnalysisResult): string {
   const cert = analysis.forensic_certainty ?? "";
+  if (cert === "AI-Generated (C2PA Verified)")
+    return "text-red-800 bg-red-50 border-red-300";
   if (cert.includes("Verified Authentic") || cert.includes("Likely Authentic"))
     return "text-green-700 bg-green-50 border-green-200";
   if (cert.includes("Near Certain") || cert.includes("Highly Probable"))

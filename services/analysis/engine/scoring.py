@@ -125,8 +125,7 @@ def compute_score(
     # never report as "Likely Authentic" or "Verified Authentic" if the
     # signer explicitly declared AI-generated content.
     if c2pa_ai_generated and c2pa_status in ("verified", "trust_warning"):
-        if forensic_certainty in ("Verified Authentic", "Likely Authentic", "Inconclusive"):
-            forensic_certainty = "Probable Manipulation"
+        forensic_certainty = "AI-Generated (C2PA Verified)"
 
     manipulation_probability = round((100 - score) / 100, 3)
 

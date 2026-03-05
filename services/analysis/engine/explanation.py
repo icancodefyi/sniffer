@@ -153,7 +153,17 @@ def build_explanation(
         )
 
     # ── AI generation detection ────────────────────────────────────────────────
-    if ai_flagged:
+    if c2pa_ai_generated and c2pa_status in ("verified", "trust_warning"):
+        # Manifest is ground truth — spectral probability is secondary
+        spectral_str = (
+            f" Spectral analysis independently measured {round(ai_probability * 100)}\u202f% probability."
+            if ai_probability > 0.20 else ""
+        )
+        parts.append(
+            f"AI-generated origin is confirmed by the C2PA manifest — the signer cryptographically declared "
+            f"this content was created using a trained AI model (\u2018trainedAlgorithmicMedia\u2019).{spectral_str}"
+        )
+    elif ai_flagged:
         parts.append(
             f"Spectral and signal analysis indicates a {round(ai_probability * 100)}\u202f% probability "
             "that this image was AI-generated: the 2D FFT power spectrum shows periodic grid artefacts "

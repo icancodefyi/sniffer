@@ -11,6 +11,7 @@ interface Props {
 }
 
 export function CaseHeader({ caseRef, verdict, verdictColor, caseData, forensicCertainty, tamperRegionCount }: Props) {
+  const isAiConfirmed = forensicCertainty === "AI-Generated (C2PA Verified)";
   const regionLabel =
     tamperRegionCount != null && tamperRegionCount > 0
       ? ` — ${tamperRegionCount} region${tamperRegionCount > 1 ? "s" : ""} identified`

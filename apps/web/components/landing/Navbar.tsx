@@ -41,6 +41,7 @@ export function Navbar() {
             { label: "FEATURES", href: "#features" },
             { label: "PROTECT", href: "/protect" },
             { label: "TAKEDOWN", href: "/takedown" },
+            { label: "RESOURCES", href: "/resources" },
             { label: "DASHBOARD", href: "/dashboard" },
           ].map((item) => (
             <Link

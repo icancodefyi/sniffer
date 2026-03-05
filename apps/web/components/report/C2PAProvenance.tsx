@@ -161,9 +161,28 @@ export function C2PAProvenance({ c2pa }: Props) {
             {/* ── Actions provenance chain ── */}
             {c2pa.actions_summary && c2pa.actions_summary.length > 0 && (
               <div className="px-4 py-3 border-b border-[#f0ede8]">
-                <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-2">
-                  Provenance Actions
-                </p>
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest">
+                    Provenance Actions
+                  </p>
+                  <div className="relative group">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#c4bdb5] cursor-help">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 hidden group-hover:block z-10">
+                      <div className="bg-[#1a1a1a] text-white text-[11px] leading-relaxed px-3 py-2.5 rounded-lg shadow-xl">
+                        <p className="font-semibold mb-1 text-white/90">What are Provenance Actions?</p>
+                        <p className="text-white/60">
+                          Every step recorded by the content's creator in the C2PA manifest — from generation to export.
+                          This is an unforgeable, cryptographically-signed paper trail of how the file was made and transformed.
+                        </p>
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1a1a1a]" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <ol className="space-y-2">
                   {c2pa.actions_summary.map((action, i) => (
                     <li key={i} className="flex items-start gap-2.5">

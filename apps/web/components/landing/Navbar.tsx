@@ -39,8 +39,9 @@ export function Navbar() {
           {[
             { label: "HOW IT WORKS", href: "#how-it-works" },
             { label: "FEATURES", href: "#features" },
+            { label: "PROTECT", href: "/protect" },
+            { label: "TAKEDOWN", href: "/takedown" },
             { label: "DASHBOARD", href: "/dashboard" },
-            { label: "ABOUT", href: "#about" },
           ].map((item) => (
             <Link
               key={item.label}

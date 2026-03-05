@@ -196,17 +196,19 @@ export default function ReportPage() {
             {/* What the manifest says */}
             <C2PAProvenance c2pa={analysis.c2pa_result} />
 
-            {/* Image + explanation side by side */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <div>
-                <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Forensic Summary</p>
-                <p className="text-[12.5px] text-[#6b7280] leading-relaxed">{analysis.explanation}</p>
-              </div>
+            {/* Image evidence — full width */}
+            <div className="mb-6">
               <ImageEvidence
                 suspiciousImg={suspiciousImg}
                 referenceImg={referenceImg}
                 tamperHeatmap={analysis.tamper_heatmap}
               />
+            </div>
+
+            {/* Forensic summary — full width, styled prose block */}
+            <div className="mb-8 rounded-xl border border-[#e8e4de] bg-white px-5 py-4">
+              <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Forensic Summary</p>
+              <p className="text-[12.5px] text-[#374151] leading-[1.75] whitespace-pre-line">{analysis.explanation}</p>
             </div>
 
             <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
@@ -219,18 +221,24 @@ export default function ReportPage() {
              STANDARD FORENSIC REPORT LAYOUT
           ══════════════════════════════════════════════════════════════════ */
           <>
-            {/* Score + Images */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Score row + image evidence */}
+            <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-6 mb-6 items-start">
               <div>
-                <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Authenticity Analysis</p>
+                <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Authenticity Score</p>
                 <ScoreGauge score={score} />
-                <p className="text-[12.5px] text-[#6b7280] mt-4 leading-relaxed">{analysis.explanation}</p>
               </div>
               <ImageEvidence
                 suspiciousImg={suspiciousImg}
                 referenceImg={referenceImg}
                 tamperHeatmap={analysis.tamper_heatmap}
+                compact
               />
+            </div>
+
+            {/* Explanation — full width prose block */}
+            <div className="mb-8 rounded-xl border border-[#e8e4de] bg-white px-5 py-4">
+              <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Analysis Summary</p>
+              <p className="text-[12.5px] text-[#374151] leading-[1.75]">{analysis.explanation}</p>
             </div>
 
             <ForensicSignals rows={signalRows} />

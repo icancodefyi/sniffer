@@ -120,7 +120,41 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
+  body {
+    @apply bg-white text-foreground;
+  }
+}
+
+/* ── Sniffer custom animations ── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+
+@keyframes hero-text-enter {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hero-illustration-enter {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.hero-text-enter {
+  animation: hero-text-enter 0.65s ease-out both;
+}
+
+.hero-illustration-enter {
+  animation: hero-illustration-enter 0.75s ease-out 0.15s both;
 }

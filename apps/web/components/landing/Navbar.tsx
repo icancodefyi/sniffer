@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,12 +26,7 @@ export function Navbar() {
         style={{ maxWidth: "1200px", margin: "0 auto" }}
       >
         <Link href="/" className="flex items-center gap-2">
-          <span
-            className="flex h-7 w-7 items-center justify-center rounded-md text-white text-[11px] font-bold"
-            style={{ background: "#4F46E5" }}
-          >
-            S
-          </span>
+         <Image src="/logo.png" alt="Sniffer" width={28} height={28} />
           <span
             className="text-[21px] font-semibold tracking-tight"
             style={{ color: "#0a0a0a" }}

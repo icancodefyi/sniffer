@@ -10,6 +10,9 @@ router = APIRouter()
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
+# In-memory result store — replace with DB in production
+_results: dict[str, dict] = {}
+
 
 class AnalysisResult(BaseModel):
     case_id: str
@@ -100,7 +103,7 @@ async def run_analysis(
     has_reference = reference_image is not None
     result = _mock_analyze(file_bytes, suspicious_image.content_type, has_reference)
 
-    return AnalysisResult(
+    result_obj = AnalysisResult(
         case_id=case_id,
         file_hash=hashlib.sha256(file_bytes).hexdigest(),
         file_size=len(file_bytes),
@@ -108,3 +111,13 @@ async def run_analysis(
         timestamp=time.time(),
         **result,
     )
+    _results[case_id] = result_obj.model_dump()
+    return result_obj
+
+
+@router.get("/{case_id}/result", response_model=AnalysisResult)
+def get_analysis_result(case_id: str):
+    result = _results.get(case_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Analysis result not found.")
+    return result

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 import uuid
 import time
@@ -10,10 +10,9 @@ router = APIRouter()
 class CaseCreate(BaseModel):
     anonymous: bool
     email: Optional[str] = None
-    platform_source: str  # WhatsApp | Instagram | Telegram | Facebook | X/Twitter | Unknown website | Other
-    impersonation: str    # Yes | No | Not sure
-    harm_category: str    # Harassment | Reputation damage | Fraud or scam | Misinformation | Other
-    notes: Optional[str] = None
+    platform_source: str  # Instagram | Telegram | Twitter / X | WhatsApp | Facebook | Other
+    issue_type: str       # Deepfake / face swap | Edited image | Harassment / blackmail | Fake news | Other
+    description: Optional[str] = None
 
 
 class CaseResponse(BaseModel):
@@ -21,9 +20,8 @@ class CaseResponse(BaseModel):
     created_at: float
     anonymous: bool
     platform_source: str
-    impersonation: str
-    harm_category: str
-    notes: Optional[str]
+    issue_type: str
+    description: Optional[str]
 
 
 # In-memory store — replace with PostgreSQL in production
@@ -42,9 +40,8 @@ def create_case(payload: CaseCreate):
         "anonymous": payload.anonymous,
         # Do not store email in response; only persist server-side if needed
         "platform_source": payload.platform_source,
-        "impersonation": payload.impersonation,
-        "harm_category": payload.harm_category,
-        "notes": payload.notes,
+        "issue_type": payload.issue_type,
+        "description": payload.description,
     }
     _cases[case_id] = record
     return record

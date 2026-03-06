@@ -1,13 +1,16 @@
+"use client";
 import Image from "next/image";
 import Link from "next/link";
-
-const STATS = [
-  { value: "99.2%", label: "Detection accuracy" },
-  { value: "<60s", label: "Mean analysis time" },
-  { value: "SHA-256", label: "Cryptographic hashing" },
-];
+import { useTranslation } from "@/components/i18n/LanguageProvider";
 
 export function HeroSection() {
+  const { t } = useTranslation();
+  const STATS = [
+    { value: "99.2%", label: t.hero.stat1Label },
+    { value: "<60s", label: t.hero.stat2Label },
+    { value: "SHA-256", label: t.hero.stat3Label },
+  ];
+
   return (
     <section className="relative w-full overflow-hidden bg-white">
 
@@ -43,21 +46,20 @@ export function HeroSection() {
           <div className="mb-6">
             <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-[12.5px] font-medium text-indigo-600 shadow-[0_0_0_1px_rgba(99,102,241,0.22),0_2px_10px_rgba(0,0,0,0.06)]">
               <span aria-hidden="true" className="h-2 w-2 rounded-full bg-indigo-400" />
-              AI-Powered Media Authenticity Verification
+              {t.hero.badge}
             </span>
           </div>
 
           {/* H1 — font-serif maps to Georgia; text-5xl (48px) guarantees 2 lines in this column */}
           <h1 className="mb-5 font-serif text-3xl sm:text-4xl md:text-5xl font-medium leading-[1.1] tracking-tight text-[#0a0a0a]">
-            Verify Manipulated Images.
+            {t.hero.heading1}
             <br />
-            Protect Your Digital Identity.
+            {t.hero.heading2}
           </h1>
 
           {/* Sub-copy */}
           <p className="mb-8 max-w-md text-[17px] leading-[1.7] text-[#6b7280]">
-            Multi-layer forensic analysis to detect deepfakes and image tampering.
-            Generate cryptographic evidence reports for legal takedown and platform abuse filings.
+            {t.hero.body}
           </p>
 
           {/* CTAs */}
@@ -66,7 +68,7 @@ export function HeroSection() {
               href="/verify"
               className="inline-flex items-center gap-2 rounded-full bg-[#0a0a0a] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-75"
             >
-              Create Verification Case
+              {t.hero.ctaPrimary}
               <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
@@ -75,17 +77,17 @@ export function HeroSection() {
               href="/protect"
               className="inline-flex items-center rounded-full border border-[#e0d8d0] bg-white px-6 py-3 text-sm font-medium text-[#3d3530] transition-colors hover:border-indigo-400 hover:text-indigo-600"
             >
-              Protect Your Images
+              {t.hero.ctaSecondary}
             </Link>
           </div>
 
           {/* Trust row */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#b0a89e]">
-            <span>Private by default</span>
+            <span>{t.hero.trust1}</span>
             <span aria-hidden="true" className="inline-block h-px w-3.5 bg-[#e0dbd5]" />
-            <span>Anonymous reporting</span>
+            <span>{t.hero.trust2}</span>
             <span aria-hidden="true" className="inline-block h-px w-3.5 bg-[#e0dbd5]" />
-            <span>No account required</span>
+            <span>{t.hero.trust3}</span>
           </div>
         </div>
 

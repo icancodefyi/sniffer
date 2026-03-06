@@ -2,19 +2,22 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslation } from "@/components/i18n/LanguageProvider";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 
-const NAV_LINKS = [
-  { label: "HOW IT WORKS", href: "#how-it-works" },
-  { label: "FEATURES", href: "#features" },
-  { label: "PROTECT", href: "/protect" },
-  { label: "TAKEDOWN", href: "/takedown" },
-  { label: "RESOURCES", href: "/resources" },
-  { label: "DASHBOARD", href: "/dashboard" },
+const NAV_HREFS = [
+  { key: "howItWorks" as const, href: "#how-it-works" },
+  { key: "features" as const, href: "#features" },
+  { key: "protect" as const, href: "/protect" },
+  { key: "takedown" as const, href: "/takedown" },
+  { key: "resources" as const, href: "/resources" },
+  { key: "dashboard" as const, href: "/dashboard" },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -47,14 +50,14 @@ export function Navbar() {
 
         {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map((item) => (
+          {NAV_HREFS.map((item) => (
             <Link
-              key={item.label}
+              key={item.key}
               href={item.href}
               className="flex items-center gap-0.5 text-[12.5px] font-medium transition-colors hover:text-[#0a0a0a]"
               style={{ color: "#7a7268", letterSpacing: "0.04em" }}
             >
-              {item.label}
+              {t.nav[item.key]}
               <span className="text-[9px] ml-0.5" style={{ color: "#b0a89e" }}>›</span>
             </Link>
           ))}
@@ -62,19 +65,20 @@ export function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-2.5">
+          <LanguageSwitcher />
           <Link
             href="/verify"
             className="px-5 py-2 rounded-full text-[13px] font-medium text-white transition-opacity hover:opacity-80"
             style={{ background: "#0a0a0a" }}
           >
-            Start Verification
+            {t.nav.startVerification}
           </Link>
           <Link
             href="/protect"
             className="px-5 py-2 rounded-full text-[13px] font-medium transition-colors hover:border-[#4F46E5]"
             style={{ border: "1px solid #e0d8d0", color: "#3d3530", background: "#fff" }}
           >
-            Protect Images
+            {t.nav.protectImages}
           </Link>
         </div>
 
@@ -85,7 +89,7 @@ export function Navbar() {
             className="px-4 py-1.5 rounded-full text-[12px] font-medium text-white"
             style={{ background: "#0a0a0a" }}
           >
-            Verify
+            {t.nav.verify}
           </Link>
           <button
             type="button"
@@ -118,9 +122,9 @@ export function Navbar() {
           className="md:hidden border-t bg-white px-6 py-5 flex flex-col"
           style={{ borderColor: "rgba(0,0,0,0.06)" }}
         >
-          {NAV_LINKS.map((item) => (
+          {NAV_HREFS.map((item) => (
             <Link
-              key={item.label}
+              key={item.key}
               href={item.href}
               onClick={() => setMenuOpen(false)}
               className="py-3.5 text-[13px] font-medium border-b last:border-0 transition-colors hover:text-[#0a0a0a]"
@@ -130,7 +134,7 @@ export function Navbar() {
                 borderColor: "#f0ede8",
               }}
             >
-              {item.label}
+              {t.nav[item.key]}
             </Link>
           ))}
           <div className="mt-5 flex flex-col gap-3">
@@ -140,7 +144,7 @@ export function Navbar() {
               className="w-full text-center py-3 rounded-full text-[13px] font-medium text-white"
               style={{ background: "#0a0a0a" }}
             >
-              Start Verification
+              {t.nav.startVerification}
             </Link>
             <Link
               href="/protect"
@@ -148,8 +152,11 @@ export function Navbar() {
               className="w-full text-center py-3 rounded-full text-[13px] font-medium"
               style={{ border: "1px solid #e0d8d0", color: "#3d3530" }}
             >
-              Protect Images
+              {t.nav.protectImages}
             </Link>
+            <div className="flex justify-center pt-1">
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       )}

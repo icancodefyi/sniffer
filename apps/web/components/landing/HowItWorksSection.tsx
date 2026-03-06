@@ -1,44 +1,29 @@
-const STEPS = [
-  {
-    n: "01",
-    title: "Upload the image",
-    desc: "Any JPEG, PNG, or WebP. No account needed. The file is SHA-256 hashed on receipt — your original is never retained after analysis.",
-    detail: "SHA-256 hash on upload",
-    aside: "We never store your image",
-  },
-  {
-    n: "02",
-    title: "Seven-layer forensic analysis",
-    desc: "Error-level analysis, EXIF integrity check, GAN artifact detection, facial landmark distortion, clone region mapping, noise patterns, and compression fingerprinting — run concurrently.",
-    detail: "~30–60 seconds",
-    aside: "All layers run in parallel",
-  },
-  {
-    n: "03",
-    title: "Download a signed evidence report",
-    desc: "A structured PDF with per-layer confidence scores, a cryptographic case ID, and a SHA-256 image hash. Formatted to meet platform takedown and legal filing requirements.",
-    detail: "PDF · case ID · signature",
-    aside: "Accepted by major platforms",
-  },
-];
+"use client";
+import { useTranslation } from "@/components/i18n/LanguageProvider";
 
 export function HowItWorksSection() {
+  const { t } = useTranslation();
+  const STEPS = [
+    { n: "01", title: t.howItWorks.step1Title, desc: t.howItWorks.step1Desc, detail: t.howItWorks.step1Detail, aside: t.howItWorks.step1Aside },
+    { n: "02", title: t.howItWorks.step2Title, desc: t.howItWorks.step2Desc, detail: t.howItWorks.step2Detail, aside: t.howItWorks.step2Aside },
+    { n: "03", title: t.howItWorks.step3Title, desc: t.howItWorks.step3Desc, detail: t.howItWorks.step3Detail, aside: t.howItWorks.step3Aside },
+  ];
   return (
     <section id="how-it-works" className="w-full bg-[#fafaf8] py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-8">
 
         <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a8a29e]">
-          How it works
+          {t.howItWorks.eyebrow}
         </p>
         <div className="mb-20 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <h2
-            className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
+            className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a] whitespace-pre-line"
             style={{ maxWidth: "460px" }}
           >
-            From image to evidence<br />in three steps.
+            {t.howItWorks.heading}
           </h2>
           <p className="text-[15px] leading-[1.7] text-[#6b7280]" style={{ maxWidth: "300px" }}>
-            No account. No install. Results in under a minute.
+            {t.howItWorks.subheading}
           </p>
         </div>
 

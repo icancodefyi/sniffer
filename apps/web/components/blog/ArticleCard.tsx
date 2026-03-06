@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { BlogPostMeta } from "@/lib/blog";
 
 interface ArticleCardProps {
@@ -81,11 +82,8 @@ export function ArticleCard({ post, index, featured }: ArticleCardProps) {
             {/* Footer row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                  style={{ background: "#0a0a0a" }}
-                >
-                  M
+                <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 bg-[#f0ede8]">
+                  <Image src="/author.png" alt={post.author} width={24} height={24} className="object-contain w-full h-full" />
                 </div>
                 <span
                   className="text-[12.5px] font-medium"
@@ -171,11 +169,8 @@ export function ArticleCard({ post, index, featured }: ArticleCardProps) {
         </p>
 
         <div className="flex items-center gap-2">
-          <div
-            className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-            style={{ background: "#0a0a0a" }}
-          >
-            M
+          <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 bg-[#f0ede8]">
+            <Image src="/author.png" alt={post.author} width={20} height={20} className="object-contain w-full h-full" />
           </div>
           <span
             className="text-[11.5px] font-medium"

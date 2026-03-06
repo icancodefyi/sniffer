@@ -5,7 +5,7 @@ import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import { Typography } from "@/components/ui/typography";
 import { Navbar } from "@/components/landing/Navbar";
 import { CoverImage } from "@/components/blog/CoverImage";
-
+import Image from "next/image";
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -99,11 +99,8 @@ export default async function BlogPostPage({ params }: PageProps) {
             className="flex items-center gap-4 pb-8"
             style={{ borderBottom: "1px solid #e8e4de" }}
           >
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-semibold text-white shrink-0"
-              style={{ background: "#0a0a0a" }}
-            >
-              M
+            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-[#f0ede8]">
+              <Image src="/author.png" alt={post.author} width={36} height={36} className="object-contain w-full h-full" />
             </div>
             <div>
               <p

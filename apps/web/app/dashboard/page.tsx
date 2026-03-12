@@ -16,10 +16,10 @@ export const metadata = {
 };
 
 const STATS = [
-  { label: "Total Verifications", value: "4,812", delta: "+38 today" },
-  { label: "Deepfakes Detected", value: "1,247", delta: "+12 today", alert: true },
-  { label: "Registry Entries", value: "892", delta: "+6 today" },
-  { label: "Takedown Notices", value: "341", delta: "+3 today" },
+  { label: "Total Verifications", value: "287", delta: "+12 today" },
+  { label: "Deepfakes Detected", value: "145", delta: "+8 today", alert: true },
+  { label: "Registry Entries", value: "203", delta: "+2 today" },
+  { label: "Takedown Notices", value: "67", delta: "+1 today" },
 ];
 
 export default function DashboardPage() {

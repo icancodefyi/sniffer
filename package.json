@@ -3,13 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --names \"web,api\" --prefix-colors \"blue,green\" \"pnpm --filter @sniffer/web dev\" \"pnpm --filter @sniffer/analysis dev\"",
+    "dev": "concurrently --names \"web,analysis,intel,takedown\" --prefix-colors \"blue,green,yellow,magenta\" \"pnpm --filter @sniffer/web dev\" \"pnpm --filter @sniffer/analysis dev\" \"pnpm --filter @sniffer/intelligence dev\" \"pnpm --filter @sniffer/takedown dev\"",
     "dev:web": "pnpm --filter @sniffer/web dev",
     "dev:api": "pnpm --filter @sniffer/analysis dev",
+    "dev:intel": "pnpm --filter @sniffer/intelligence dev",
+    "dev:takedown": "pnpm --filter @sniffer/takedown dev",
     "build": "pnpm --filter @sniffer/web build",
-    "start": "concurrently --names \"web,api\" --prefix-colors \"blue,green\" \"pnpm --filter @sniffer/web start\" \"pnpm --filter @sniffer/analysis start\"",
+    "start": "concurrently --names \"web,analysis,intel,takedown\" --prefix-colors \"blue,green,yellow,magenta\" \"pnpm --filter @sniffer/web start\" \"pnpm --filter @sniffer/analysis start\" \"pnpm --filter @sniffer/intelligence start\" \"pnpm --filter @sniffer/takedown start\"",
     "lint": "pnpm --filter @sniffer/web lint",
-    "install:py": "pnpm --filter @sniffer/analysis install:py"
+    "install:py": "pnpm --filter @sniffer/analysis install:py && pnpm --filter @sniffer/intelligence install:py && pnpm --filter @sniffer/takedown install:py"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -4,6 +4,7 @@ export interface Translations {
     features: string;
     protect: string;
     takedown: string;
+    investigate: string;
     resources: string;
     dashboard: string;
     startVerification: string;
@@ -74,6 +75,7 @@ export const translations: Record<string, Translations> = {
       features: "FEATURES",
       protect: "PROTECT",
       takedown: "TAKEDOWN",
+      investigate: "INVESTIGATE",
       resources: "RESOURCES",
       dashboard: "DASHBOARD",
       startVerification: "Start Verification",
@@ -143,6 +145,7 @@ export const translations: Record<string, Translations> = {
       features: "विशेषताएं",
       protect: "सुरक्षित करें",
       takedown: "हटाएं",
+      investigate: "जांच करें",
       resources: "संसाधन",
       dashboard: "डैशबोर्ड",
       startVerification: "सत्यापन शुरू करें",
@@ -212,6 +215,7 @@ export const translations: Record<string, Translations> = {
       features: "বৈশিষ্ট্যসমূহ",
       protect: "সুরক্ষিত করুন",
       takedown: "সরিয়ে নিন",
+      investigate: "তদন্ত করুন",
       resources: "সম্পদ",
       dashboard: "ড্যাশবোর্ড",
       startVerification: "যাচাই শুরু করুন",
@@ -281,6 +285,7 @@ export const translations: Record<string, Translations> = {
       features: "அம்சங்கள்",
       protect: "பாதுகாக்கவும்",
       takedown: "அகற்றவும்",
+      investigate: "விசாரி",
       resources: "வளங்கள்",
       dashboard: "டாஷ்போர்டு",
       startVerification: "சரிபார்ப்பை தொடங்குங்கள்",
@@ -350,6 +355,7 @@ export const translations: Record<string, Translations> = {
       features: "లక్షణాలు",
       protect: "రక్షించండి",
       takedown: "తొలగించండి",
+      investigate: "విచారించు",
       resources: "వనరులు",
       dashboard: "డాష్‌బోర్డ్",
       startVerification: "ధృవీకరణ ప్రారంభించండి",
@@ -419,6 +425,7 @@ export const translations: Record<string, Translations> = {
       features: "वैशिष्ट्ये",
       protect: "संरक्षित करा",
       takedown: "काढून टाका",
+      investigate: "तपास करा",
       resources: "संसाधने",
       dashboard: "डॅशबोर्ड",
       startVerification: "पडताळणी सुरू करा",
@@ -488,6 +495,7 @@ export const translations: Record<string, Translations> = {
       features: "ವೈಶಿಷ್ಟ್ಯಗಳು",
       protect: "ರಕ್ಷಿಸಿ",
       takedown: "ತೆಗೆದುಹಾಕಿ",
+      investigate: "ತನಿಖೆ ಮಾಡಿ",
       resources: "ಸಂಪನ್ಮೂಲಗಳು",
       dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
       startVerification: "ಪರಿಶೀಲನೆ ಪ್ರಾರಂಭಿಸಿ",
@@ -557,6 +565,7 @@ export const translations: Record<string, Translations> = {
       features: "વૈશિષ્ટ્યો",
       protect: "સુરક્ષિત કરો",
       takedown: "દૂર કરો",
+      investigate: "તપાસ કરો",
       resources: "સ્રોત",
       dashboard: "ડૅશબોર્ડ",
       startVerification: "ચકાસણી શરૂ કરો",

@@ -10,6 +10,7 @@ const NAV_HREFS = [
   { key: "features" as const, href: "#features" },
   { key: "protect" as const, href: "/protect" },
   { key: "takedown" as const, href: "/takedown" },
+  { key: "investigate" as const, href: "/investigate" },
   { key: "resources" as const, href: "/resources" },
   { key: "dashboard" as const, href: "/dashboard" },
 ];

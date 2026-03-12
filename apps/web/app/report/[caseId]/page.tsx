@@ -213,7 +213,7 @@ export default function ReportPage() {
 
             <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
             <EvidenceTimeline entries={timeline} />
-            {takedownSteps && <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />}
+            <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />
             {analysis.audit && <AuditTrail audit={analysis.audit} />}
           </>
         ) : (
@@ -252,7 +252,7 @@ export default function ReportPage() {
 
             <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
             <EvidenceTimeline entries={timeline} />
-            {takedownSteps && <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />}
+            <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />
             {analysis.audit && <AuditTrail audit={analysis.audit} />}
           </>
         )}

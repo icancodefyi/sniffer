@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useSession, signIn } from "next-auth/react";
 import type { CaseData, AnalysisResult } from "@/components/report/types";
 import {
   buildCaseRef,
@@ -37,6 +38,76 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [hashCopied, setHashCopied] = useState(false);
+
+  // ── Auth / save-report state ───────────────────────────────────────────────
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const [saveEmail, setSaveEmail] = useState("");
+  const [saveSent, setSaveSent] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCaseSaved, setIsCaseSaved] = useState(false);
+
+  // Check if this user already saved the case
+  useEffect(() => {
+    const userId = (session?.user as { id?: string } | undefined)?.id;
+    if (!userId) return;
+    fetch(`/api/user/cases?caseId=${caseId}`)
+      .then((r) => r.json())
+      .then((d: { saved: boolean }) => setIsCaseSaved(d.saved))
+      .catch(() => { /* silent */ });
+  }, [session, caseId]);
+
+  // Auto-save when returning from magic-link with ?autosave=1
+  useEffect(() => {
+    const userId = (session?.user as { id?: string } | undefined)?.id;
+    if (!userId || searchParams.get("autosave") !== "1" || !caseData || !analysis) return;
+    setIsSaving(true);
+    fetch("/api/cases/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        caseId,
+        domain: caseData.platform_source,
+        caseRef: buildCaseRef(caseId),
+      }),
+    })
+      .then(() => {
+        setIsCaseSaved(true);
+        router.replace(`/report/${caseId}`, { scroll: false });
+      })
+      .finally(() => setIsSaving(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, caseData, analysis]);
+
+  async function handleSendMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    if (!saveEmail.trim()) return;
+    setIsSaving(true);
+    await signIn("nodemailer", {
+      email: saveEmail,
+      callbackUrl: `/report/${caseId}?autosave=1`,
+      redirect: false,
+    });
+    setSaveSent(true);
+    setIsSaving(false);
+  }
+
+  async function handleSaveCase() {
+    const userId = (session?.user as { id?: string } | undefined)?.id;
+    if (!userId || !caseData || !analysis) return;
+    setIsSaving(true);
+    await fetch("/api/cases/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        caseId,
+        domain: caseData.platform_source,
+        caseRef: buildCaseRef(caseId),
+      }),
+    });
+    setIsCaseSaved(true);
+    setIsSaving(false);
+  }
 
   useEffect(() => {
     if (!caseId) {
@@ -142,6 +213,80 @@ export default function ReportPage() {
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10 print:py-6 print:px-10">
 
+        {/* ── Save report (no context switch) ─────────────────────────── */}
+        {isCaseSaved ? (
+          <div className="mb-6 flex items-center gap-2.5 pl-3 pr-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50">
+            <svg width="13" height="13" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <p className="text-[12.5px] text-emerald-800 font-medium">Report saved to your account</p>
+            <Link href="/dashboard" className="ml-auto text-[12px] text-emerald-700 hover:underline shrink-0">
+              View dashboard →
+            </Link>
+          </div>
+        ) : (
+          <div className="mb-6 rounded-xl border border-[#e8e4de] bg-white overflow-hidden">
+            <div className="px-5 py-4">
+              {saveSent ? (
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full border border-emerald-200 bg-emerald-50 flex items-center justify-center shrink-0 mt-0.5">
+                    <svg width="11" height="11" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                      <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#0a0a0a] mb-0.5">Check your inbox</p>
+                    <p className="text-[12px] text-[#6b7280] leading-relaxed">
+                      Magic link sent to <span className="font-medium text-[#374151]">{saveEmail}</span> — click it to save this report to your account.
+                    </p>
+                  </div>
+                </div>
+              ) : (session?.user as { id?: string } | undefined)?.id ? (
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#0a0a0a]">Save this report</p>
+                    <p className="text-[12px] text-[#6b7280]">Track this case in your account dashboard.</p>
+                  </div>
+                  <button
+                    onClick={handleSaveCase}
+                    disabled={isSaving}
+                    className="shrink-0 flex items-center gap-1.5 text-[12px] font-medium bg-[#0a0a0a] text-white px-4 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors disabled:opacity-60"
+                  >
+                    {isSaving && <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                    {isSaving ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-[13px] font-semibold text-[#0a0a0a] mb-1">Track this case</p>
+                  <p className="text-[12px] text-[#6b7280] mb-3">
+                    Save this report to your account — we&apos;ll email you a magic link. No password needed.
+                  </p>
+                  <form onSubmit={handleSendMagicLink} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={saveEmail}
+                      onChange={(e) => setSaveEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      required
+                      className="flex-1 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3.5 py-2 text-[12.5px] text-[#0a0a0a] placeholder:text-[#c4bdb5] focus:outline-none focus:border-[#0a0a0a] transition-colors"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!saveEmail.trim() || isSaving}
+                      className="flex items-center gap-1.5 text-[12px] font-medium bg-[#0a0a0a] text-white px-4 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors disabled:opacity-40 shrink-0"
+                    >
+                      {isSaving && <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                      {isSaving ? "Sending…" : "Save report"}
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <CaseHeader
           caseRef={caseRef}
           verdict={verdict}
@@ -213,7 +358,7 @@ export default function ReportPage() {
 
             <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
             <EvidenceTimeline entries={timeline} />
-            <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />
+            <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} caseId={caseId} fileHash={analysis.file_hash} caseRef={caseRef} />
             {analysis.audit && <AuditTrail audit={analysis.audit} />}
           </>
         ) : (
@@ -252,7 +397,7 @@ export default function ReportPage() {
 
             <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
             <EvidenceTimeline entries={timeline} />
-            <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} />
+            <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} caseId={caseId} fileHash={analysis.file_hash} caseRef={caseRef} />
             {analysis.audit && <AuditTrail audit={analysis.audit} />}
           </>
         )}

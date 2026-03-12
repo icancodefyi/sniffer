@@ -8,7 +8,7 @@ interface Props {
 export function StepIssueType({ value, onChange }: Props) {
   return (
     <div>
-      <p className="font-mono text-[11px] text-indigo-500 uppercase tracking-widest mb-3">Step 3 of 4</p>
+      <p className="font-mono text-[11px] text-indigo-500 uppercase tracking-widest mb-3">Step 2 of 3</p>
       <h1
         className="text-3xl text-[#0a0a0a] leading-snug mb-2"
         style={{ fontFamily: "Georgia,'Times New Roman',serif", fontWeight: 400 }}

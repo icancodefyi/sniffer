@@ -7,10 +7,6 @@ import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 
 const NAV_HREFS = [
   { key: "howItWorks" as const, href: "#how-it-works" },
-  { key: "features" as const, href: "#features" },
-  { key: "protect" as const, href: "/protect" },
-  { key: "takedown" as const, href: "/takedown" },
-  { key: "investigate" as const, href: "/investigate" },
   { key: "resources" as const, href: "/resources" },
   { key: "dashboard" as const, href: "/dashboard" },
 ];
@@ -73,13 +69,6 @@ export function Navbar() {
             style={{ background: "#0a0a0a" }}
           >
             {t.nav.startVerification}
-          </Link>
-          <Link
-            href="/protect"
-            className="px-5 py-2 rounded-full text-[13px] font-medium transition-colors hover:border-[#4F46E5]"
-            style={{ border: "1px solid #e0d8d0", color: "#3d3530", background: "#fff" }}
-          >
-            {t.nav.protectImages}
           </Link>
         </div>
 
@@ -146,14 +135,6 @@ export function Navbar() {
               style={{ background: "#0a0a0a" }}
             >
               {t.nav.startVerification}
-            </Link>
-            <Link
-              href="/protect"
-              onClick={() => setMenuOpen(false)}
-              className="w-full text-center py-3 rounded-full text-[13px] font-medium"
-              style={{ border: "1px solid #e0d8d0", color: "#3d3530" }}
-            >
-              {t.nav.protectImages}
             </Link>
             <div className="flex justify-center pt-1">
               <LanguageSwitcher />

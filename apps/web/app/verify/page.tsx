@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { StepIndicator } from "@/components/verify/StepIndicator";
-import { StepPrivacy } from "@/components/verify/StepPrivacy";
 import { StepPlatform } from "@/components/verify/StepPlatform";
 import { StepIssueType } from "@/components/verify/StepIssueType";
 import { StepDescription } from "@/components/verify/StepDescription";
@@ -18,15 +17,14 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [anonymous, setAnonymous] = useState<boolean | null>(null);
+  const [anonymous] = useState<boolean>(true);
   const [platform, setPlatform] = useState("");
   const [issueType, setIssueType] = useState("");
   const [description, setDescription] = useState("");
 
   function canAdvance() {
-    if (step === 1) return anonymous !== null;
-    if (step === 2) return platform !== "";
-    if (step === 3) return issueType !== "";
+    if (step === 1) return platform !== "";
+    if (step === 2) return issueType !== "";
     return true;
   }
 
@@ -76,15 +74,14 @@ export default function VerifyPage() {
           Sniffer
         </Link>
         <span className="text-[#d4cfc9]">/</span>
-        <span className="text-[13px] text-[#9ca3af]">Start Verification</span>
+        <span className="text-[13px] text-[#9ca3af]">Analyze an Image</span>
       </header>
 
       <main className="max-w-xl mx-auto px-6 py-14">
         <StepIndicator step={step} />
-        {step === 1 && <StepPrivacy value={anonymous} onChange={setAnonymous} />}
-        {step === 2 && <StepPlatform value={platform} onChange={setPlatform} />}
-        {step === 3 && <StepIssueType value={issueType} onChange={setIssueType} />}
-        {step === 4 && (
+        {step === 1 && <StepPlatform value={platform} onChange={setPlatform} />}
+        {step === 2 && <StepIssueType value={issueType} onChange={setIssueType} />}
+        {step === 3 && (
           <StepDescription
             value={description}
             onChange={setDescription}
@@ -122,7 +119,7 @@ export default function VerifyPage() {
                 Creating case...
               </>
             ) : step === TOTAL_STEPS ? (
-              "Create Case & Upload →"
+              "Continue to Upload →"
             ) : (
               "Continue →"
             )}

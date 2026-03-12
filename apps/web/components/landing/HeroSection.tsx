@@ -74,7 +74,7 @@ export function HeroSection() {
               </svg>
             </Link>
             <Link
-              href="/protect"
+              href="#how-it-works"
               className="inline-flex items-center rounded-full border border-[#e0d8d0] bg-white px-6 py-3 text-sm font-medium text-[#3d3530] transition-colors hover:border-indigo-400 hover:text-indigo-600"
             >
               {t.hero.ctaSecondary}

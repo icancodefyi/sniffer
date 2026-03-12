@@ -1,4 +1,4 @@
-export const TOTAL_STEPS = 4;
+export const TOTAL_STEPS = 3;
 
 export const PLATFORMS = [
   { value: "Instagram" },
@@ -17,4 +17,4 @@ export const ISSUE_TYPES = [
   { value: "Other", desc: "Any other image manipulation concern" },
 ];
 
-export const STEP_LABELS = ["Privacy", "Platform", "Issue", "Details"];
+export const STEP_LABELS = ["Platform", "Issue", "Details"];

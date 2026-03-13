@@ -124,6 +124,15 @@ function UploadContent() {
         throw new Error(err.detail || "Analysis failed");
       }
 
+      const discoveryData = new FormData();
+      discoveryData.append("suspicious_image", suspiciousFile);
+      void fetch(`${API_URL}/api/analysis/${caseId}/discover`, {
+        method: "POST",
+        body: discoveryData,
+      }).catch(() => {
+        // Discovery is additive. The forensic report should still load even if trace startup fails.
+      });
+
       await new Promise<void>((res) => setTimeout(res, 400));
       router.push(`/report/${caseId}`);
     } catch (e) {

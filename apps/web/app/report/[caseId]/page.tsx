@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSession, signIn } from "next-auth/react";
@@ -23,10 +23,11 @@ import { TakedownGuidance } from "@/components/report/TakedownGuidance";
 import { TamperHeatmap } from "@/components/report/TamperHeatmap";
 import { AuditTrail } from "@/components/report/AuditTrail";
 import { C2PAProvenance } from "@/components/report/C2PAProvenance";
+import { ContentTrace } from "@/components/report/ContentTrace";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-export default function ReportPage() {
+function ReportContent() {
   const params = useParams();
   const router = useRouter();
   const caseId = params.caseId as string;
@@ -358,6 +359,7 @@ export default function ReportPage() {
 
             <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
             <EvidenceTimeline entries={timeline} />
+            <ContentTrace caseId={caseId} />
             <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} caseId={caseId} fileHash={analysis.file_hash} caseRef={caseRef} />
             {analysis.audit && <AuditTrail audit={analysis.audit} />}
           </>
@@ -397,6 +399,7 @@ export default function ReportPage() {
 
             <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
             <EvidenceTimeline entries={timeline} />
+            <ContentTrace caseId={caseId} />
             <TakedownGuidance platform={caseData.platform_source} steps={takedownSteps} caseId={caseId} fileHash={analysis.file_hash} caseRef={caseRef} />
             {analysis.audit && <AuditTrail audit={analysis.audit} />}
           </>
@@ -424,5 +427,13 @@ export default function ReportPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ReportPage() {
+  return (
+    <Suspense>
+      <ReportContent />
+    </Suspense>
   );
 }

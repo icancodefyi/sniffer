@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export default auth((req) => {
   if (!req.auth) {
     const url = new URL("/auth/signin", req.nextUrl.origin);

@@ -1,21 +1,21 @@
 const PROBLEMS = [
   {
     n: "01",
-    title: "Invisible to the naked eye",
-    desc: "Modern GAN-generated images are pixel-perfect fakes. Even trained investigators miss the artifacts. Manipulation happens at a frequency no human can sustainably monitor.",
-    stat: "~96% of fake images go undetected",
+    title: "They made it in seconds.",
+    desc: "A fake image of you can be generated in under a minute with no technical skill. By the time you find it, it's already been shared, screenshot, and reuploaded across dozens of platforms.",
+    stat: "New deepfakes take < 60 seconds to create",
   },
   {
     n: "02",
-    title: "Evidence breaks in transit",
-    desc: "Re-uploads, screenshots, and message forwards silently strip EXIF data and break provenance. By the time a complaint is filed, the image is forensically unverifiable.",
-    stat: "No verifiable chain of custody",
+    title: "Platforms won't act without proof.",
+    desc: "Every major platform requires a structured forensic report before they'll investigate. A screenshot and your word are not enough. Without verified evidence, your removal request gets closed.",
+    stat: "Unverified reports are rejected >89% of the time",
   },
   {
     n: "03",
-    title: "No clear path to takedown",
-    desc: "Platform abuse systems require evidence in specific formats. Without a structured forensic report, requests go ignored — and perpetrators face no consequence.",
-    stat: "Avg. 72h delay on platform review",
+    title: "Most victims never get it removed.",
+    desc: "You would need to know each platform's specific reporting format, the right contact for abuse teams, and how to establish forensic chain-of-custody — all while dealing with the trauma of it existing at all.",
+    stat: "We've mapped 138 platform removal contacts for you",
   },
 ];
 
@@ -24,24 +24,24 @@ export function ProblemSection() {
     <section className="w-full bg-white py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-8">
 
-        {/* Header — left-aligned with a right pull-quote stat for visual weight */}
+        {/* Header */}
         <div className="mb-20 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="mb-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a8a29e]">
-              The Problem
+              The Reality
             </p>
             <h2
               className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.1] tracking-tight text-[#0a0a0a]"
               style={{ maxWidth: "520px" }}
             >
-              Manipulation is easy.<br />Verification is not.
+              They made it in seconds.<br />You've been fighting it for months.
             </h2>
           </div>
-          {/* Pull-quote stat — makes the section feel like a real report */}
+          {/* Pull-quote stat */}
           <div className="border-l-2 border-red-300 pl-5" style={{ maxWidth: "240px" }}>
             <p className="font-mono text-[32px] font-bold leading-none text-[#0a0a0a]">500M+</p>
             <p className="mt-2 text-[13px] leading-snug text-[#6b7280]">
-              non-consensual deepfake images circulated online in 2024
+              non-consensual deepfake images in circulation in 2024 — the vast majority never removed
             </p>
           </div>
         </div>

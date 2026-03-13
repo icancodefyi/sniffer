@@ -100,6 +100,60 @@ class AiDetectionResult(BaseModel):
     ca_flagged: bool
 
 
+class DiscoveryMatch(BaseModel):
+    domain: str
+    network: Optional[str] = None
+    provider_type: Optional[str] = None
+    page_url: str
+    image_url: str
+    asset_type: str
+    confidence: float
+    match_type: str  # exact | near_duplicate | probable
+    phash_distance: int
+    dhash_distance: int
+    ahash_distance: int
+    ssim_score: float
+
+
+class DiscoveryRelatedDomain(BaseModel):
+    domain: str
+    network: str
+    provider_type: Optional[str] = None
+    reason: str
+
+
+class DiscoveryEvent(BaseModel):
+    timestamp: float
+    type: str  # domain | page | asset | match | info | error
+    message: str
+    domain: Optional[str] = None
+    page_url: Optional[str] = None
+    asset_url: Optional[str] = None
+    asset_type: Optional[str] = None
+    preview_url: Optional[str] = None
+    match_type: Optional[str] = None
+    confidence: Optional[float] = None
+
+
+class DiscoveryResult(BaseModel):
+    case_id: str
+    status: str  # queued | running | completed | failed
+    started_at: float
+    finished_at: Optional[float] = None
+    prioritized_network: Optional[str] = None
+    target_domains: List[str] = []
+    current_domain: Optional[str] = None
+    current_page: Optional[str] = None
+    current_asset: Optional[str] = None
+    domains_scanned: int = 0
+    pages_scanned: int = 0
+    candidates_evaluated: int = 0
+    direct_matches: List[dict] = []
+    related_domains: List[dict] = []
+    recent_events: List[dict] = []
+    error: Optional[str] = None
+
+
 class AnalysisResult(BaseModel):
     # Core identity
     case_id: str

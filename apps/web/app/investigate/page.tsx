@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { Suspense, useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { extractDomain } from "@/lib/url";
@@ -48,7 +48,7 @@ const STATUS_STYLES: Record<string, { dot: string; label: string; text: string }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function InvestigatePage() {
+function InvestigateContent() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -724,6 +724,14 @@ Case Reference: ${caseRef}${fileHash ? `\nSHA-256 Hash:   ${fileHash}` : ""}
 ──────────────────────────────────────\n`
     : "";
   return `Dear ${domain} Content Moderation Team,\n\nI am formally requesting the immediate removal of content hosted on ${domain} that was published without my knowledge or consent.${urlLine}${evidenceBlock}\nThis material is a serious violation of my privacy and your platform's own terms of service. I request its complete removal — including all thumbnails, previews, and cached copies — as a matter of urgency.\n\nPlease confirm removal within 48 hours. Failure to act will result in escalation to your hosting provider, domain registrar, and relevant legal authorities.\n\nRegards,\n[Your Full Name]\n${date}`;
+}
+
+export default function InvestigatePage() {
+  return (
+    <Suspense>
+      <InvestigateContent />
+    </Suspense>
+  );
 }
 
 function buildFormScript(domain: string, contentUrl: string): string {

@@ -59,11 +59,10 @@ export default async function BlogPostPage({ params }: PageProps) {
               <span>←</span>
               <span>Resources</span>
             </Link>
-              href="/start"
+          </div>
 
-        {/* Article header */}
-        <header className="mb-10">
-              Start Investigation
+          {/* Article header */}
+          <header className="mb-10">
           <div className="flex flex-wrap gap-2 mb-5">
             {post.tags?.map((tag) => (
               <span

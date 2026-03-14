@@ -46,6 +46,48 @@ const STATUS_STYLES: Record<string, { dot: string; label: string; text: string }
   not_found:  { dot: "bg-[#d4cfc9]",  label: "Not Found",  text: "text-[#9ca3af]"   },
 };
 
+function formatDomainLabel(value?: string | null) {
+  if (!value) return "unknown";
+  return value.trim().toLowerCase();
+}
+
+function formatTitleCase(value?: string | null, fallback = "Unknown") {
+  if (!value) return fallback;
+  return value
+    .replace(/_/g, " ")
+    .replace(/(^|\s)\S/g, (match) => match.toUpperCase());
+}
+
+function PlatformLogo({ domain, size = 64 }: { domain?: string | null; size?: number }) {
+  const normalizedDomain = formatDomainLabel(domain);
+  const [logoMissing, setLogoMissing] = useState(false);
+
+  if (!domain || logoMissing) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-4xl border border-white/70 bg-white/85 text-[#0a0a0a] shadow-[0_12px_32px_rgba(15,23,42,0.08)]"
+        style={{ width: size, height: size }}
+      >
+        <span className="font-mono text-[14px] uppercase tracking-[0.24em] text-[#6b7280]">
+          {normalizedDomain.slice(0, 2) || "--"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/supported-platforms/${normalizedDomain}.webp`}
+      alt={`${normalizedDomain} logo`}
+      width={size}
+      height={size}
+      onError={() => setLogoMissing(true)}
+      className="rounded-4xl border border-white/70 bg-white/90 object-contain p-3 shadow-[0_12px_32px_rgba(15,23,42,0.08)]"
+    />
+  );
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 function InvestigateContent() {
@@ -287,53 +329,58 @@ function InvestigateContent() {
               {results.intelligenceError ? (
                 <ServiceError message={results.intelligenceError} />
               ) : results.intelligence?.found ? (
-                <div className="border border-[#e8e4de] rounded-xl bg-white overflow-hidden">
-                  <div className="px-5 pt-5 pb-4">
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-[#f0ede8] border border-[#e8e4de] flex items-center justify-center shrink-0">
-                          <svg width="13" height="13" fill="none" stroke="#6b7280" strokeWidth="2" viewBox="0 0 24 24">
-                            <rect x="2" y="3" width="20" height="14" rx="2" />
-                            <path d="M8 21h8M12 17v4" strokeLinecap="round" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-semibold text-[#0a0a0a]">CDN Detected</p>
-                          <p className="text-[11px] text-[#9ca3af]">
-                            {results.intelligence.source === "scraped" ? "Via live scan" : "From Sniffer dataset"}
+                <div className="overflow-hidden rounded-[28px] border border-[#dbe4ff] bg-[linear-gradient(145deg,#f8fbff_0%,#ffffff_46%,#eef4ff_100%)] shadow-[0_24px_80px_rgba(148,163,184,0.18)]">
+                  <div className="px-5 py-5 sm:px-6 sm:py-6">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex items-start gap-4">
+                        <PlatformLogo domain={results.domain} />
+                        <div className="min-w-0">
+                          <p className="mb-1 text-[10px] font-mono uppercase tracking-[0.24em] text-[#8b95a7]">Hosting intelligence</p>
+                          <h2 className="text-[23px] font-semibold tracking-tight text-[#111827] sm:text-[27px]">Leak infrastructure mapped</h2>
+                          <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[#607086]">
+                            Sniffer matched the detected platform and surfaced the CDN path, provider type, and escalation surface behind <span className="font-semibold text-[#111827]">{results.domain}</span>.
                           </p>
                         </div>
                       </div>
-                      {results.intelligence.network && (
-                        <NetworkBadge network={results.intelligence.network} />
-                      )}
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.22em] text-sky-700">
+                          <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                          CDN detected
+                        </span>
+                        {results.intelligence.network && (
+                          <NetworkBadge network={results.intelligence.network} />
+                        )}
+                      </div>
                     </div>
 
-                    <dl className="grid grid-cols-2 gap-x-6 gap-y-3">
-                      <DataRow
+                    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <InsightTile
+                        label="Platform"
+                        value={results.domain}
+                        hint="Leak location identified from your lookup."
+                      />
+                      <InsightTile
                         label="CDN Provider"
-                        value={results.intelligence.cdn_provider}
+                        value={results.intelligence.cdn_provider ?? "Unknown"}
+                        hint="Primary delivery provider serving the site."
                       />
-                      <DataRow
+                      <InsightTile
                         label="Provider Type"
-                        value={results.intelligence.provider_type?.replace(/_/g, " ")}
+                        value={formatTitleCase(results.intelligence.provider_type, "Unknown")}
+                        hint="How the site appears to serve or embed content."
                       />
-                      <DataRow
-                        label="Network"
-                        value={results.intelligence.network ?? "Unknown"}
-                      />
-                      <DataRow
+                      <InsightTile
                         label="Source"
                         value={results.intelligence.source === "scraped" ? "Live scan" : "Dataset"}
+                        hint="Where this infrastructure insight was resolved."
                       />
-                    </dl>
+                    </div>
+
                     {results.intelligence.network && results.intelligence.network !== "Unknown" && (
-                      <div className="mt-4 pt-3.5 border-t border-[#f0ede8]">
-                        <p className="text-[11.5px] text-[#6b7280] leading-relaxed">
-                          <span className="font-medium text-[#374151]">{results.intelligence.network}</span>{" "}
-                          operates this CDN and controls multiple sites on the same infrastructure. Filing your
-                          removal request with the <span className="font-medium text-[#374151]">network operator
-                          directly</span> gets faster results than contacting the individual site.
+                      <div className="mt-5 rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
+                        <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Escalation signal</p>
+                        <p className="mt-2 text-[12.5px] leading-relaxed text-[#5f6b7a]">
+                          <span className="font-semibold text-[#111827]">{results.intelligence.network}</span> operates this infrastructure. Filing with the network operator directly usually gets faster movement than only contacting the individual site.
                         </p>
                       </div>
                     )}
@@ -357,44 +404,64 @@ function InvestigateContent() {
               {results.takedownError ? (
                 <ServiceError message={results.takedownError} />
               ) : results.takedown?.found ? (
-                <div className="border border-[#e8e4de] rounded-xl bg-white overflow-hidden">
-                  <div className="px-5 pt-4 pb-4 border-b border-[#f0ede8] flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[13px] font-semibold text-[#0a0a0a]">Resolved takedown route</p>
-                      <p className="text-[11px] text-[#9ca3af]">
-                        {results.takedown.source === "scraped" ? "Retrieved via live scan" : "From Sniffer dataset"}
-                      </p>
+                <div className="overflow-hidden rounded-[28px] border border-[#ddd6fe] bg-[linear-gradient(145deg,#eef2ff_0%,#ffffff_42%,#f8fafc_100%)] shadow-[0_28px_80px_rgba(99,102,241,0.12)]">
+                  <div className="px-5 py-5 sm:px-6 sm:py-6">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex items-start gap-4">
+                        <PlatformLogo domain={results.domain} />
+                        <div className="min-w-0">
+                          <p className="mb-1 text-[10px] font-mono uppercase tracking-[0.24em] text-[#7c83b6]">Takedown guidance</p>
+                          <h2 className="text-[23px] font-semibold tracking-tight text-[#111827] sm:text-[27px]">Resolved takedown route</h2>
+                          <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[#5b6475]">
+                            Investigation is complete for <span className="font-semibold text-[#111827]">{results.domain}</span>. Review the action path below, then move to Step 3 for final notice generation and submission.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                        <StatusBadge status={results.takedown.status} />
+                        <span className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/80 px-3 py-1 text-[10px] font-mono uppercase tracking-[0.22em] text-[#6b7280]">
+                          <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                          {results.takedown.source === "scraped" ? "Live scan" : "Dataset"}
+                        </span>
+                      </div>
                     </div>
-                    <StatusBadge status={results.takedown.status} />
-                  </div>
 
-                  <div className="px-5 py-5 space-y-4">
-                    <p className="text-[12.5px] text-[#6b7280] leading-relaxed">
-                      Investigation step complete. Review route metadata here, then continue to Step 3 for final notice generation and submission actions.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Removal Method</p>
-                        <p className="text-[12.5px] text-[#0a0a0a] font-medium">{results.takedown.removal_type?.replace(/_/g, " ") ?? "Unknown"}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Contact Email</p>
-                        <p className="text-[12.5px] text-[#0a0a0a] font-medium break-all">{results.takedown.contact_email ?? "Not listed"}</p>
-                      </div>
+                    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <InsightTile
+                        label="Platform"
+                        value={results.domain}
+                        hint="Where the leak was detected in this investigation."
+                      />
+                      <InsightTile
+                        label="Removal Method"
+                        value={formatTitleCase(results.takedown.removal_type, "Unknown")}
+                        hint="Primary takedown channel identified for this site."
+                      />
+                      <InsightTile
+                        label="Contact Email"
+                        value={results.takedown.contact_email ?? "Not listed"}
+                        hint="Direct trust-and-safety surface if available."
+                      />
+                      <InsightTile
+                        label="Route Page"
+                        value={results.takedown.removal_page ?? "Manual verification needed"}
+                        hint="Open this first before escalating manually."
+                      />
                     </div>
-                    <div className="flex flex-wrap gap-2">
+
+                    <div className="mt-5 flex flex-wrap gap-2">
                       {results.takedown.removal_page && (
                         <a
                           href={results.takedown.removal_page}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[12px] font-medium border border-[#e8e4de] bg-white px-3.5 py-2 rounded-lg hover:border-[#0a0a0a] transition-colors"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a0a0a] px-4 py-2 text-[12px] font-medium text-white hover:bg-[#1a1a1a] transition-colors"
                         >
                           Verify Removal Form
                         </a>
                       )}
                       {caseRefAttached && (
-                        <span className="inline-flex items-center gap-1.5 text-[11.5px] text-emerald-700 border border-emerald-200 bg-emerald-50 px-3 py-2 rounded-lg">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11.5px] text-emerald-700">
                           Case evidence attached: {caseRefAttached}
                         </span>
                       )}
@@ -474,6 +541,16 @@ function DataRow({ label, value }: { label: string; value: string | null | undef
       <dd className="text-[12.5px] text-[#374151] font-medium capitalize">
         {value ?? <span className="text-[#c4bdb5] font-normal">—</span>}
       </dd>
+    </div>
+  );
+}
+
+function InsightTile({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
+      <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">{label}</p>
+      <p className="mt-1 break-all text-[14px] font-semibold text-[#111827]">{value}</p>
+      <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">{hint}</p>
     </div>
   );
 }

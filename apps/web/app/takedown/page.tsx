@@ -8,6 +8,33 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const CYBERCRIME_EMAIL = "hello@cybercrime.gov.in";
 
 const PLATFORMS = ["Instagram", "Facebook", "X / Twitter", "WhatsApp", "Telegram", "Other"];
+const TAKEDOWN_STATUS_STYLES: Record<string, { label: string; badge: string; dot: string }> = {
+  verified: {
+    label: "Verified",
+    badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    dot: "bg-emerald-500",
+  },
+  partial: {
+    label: "Partial",
+    badge: "border-amber-200 bg-amber-50 text-amber-700",
+    dot: "bg-amber-500",
+  },
+  unverified: {
+    label: "Unverified",
+    badge: "border-orange-200 bg-orange-50 text-orange-700",
+    dot: "bg-orange-500",
+  },
+  scraped: {
+    label: "Live Scan",
+    badge: "border-sky-200 bg-sky-50 text-sky-700",
+    dot: "bg-sky-500",
+  },
+  not_found: {
+    label: "No Route",
+    badge: "border-stone-200 bg-stone-50 text-stone-600",
+    dot: "bg-stone-400",
+  },
+};
 
 interface RegistryTakedownResult {
   file_hash: string;
@@ -90,6 +117,57 @@ function buildGuidedNotice(params: {
   const contentLine = params.contentUrl?.trim() ? `Content URL: ${params.contentUrl.trim()}\n` : "";
 
   return `Subject: Urgent removal request for non-consensual content on ${params.domain}\n\nDear Trust & Safety Team,\n\nI am requesting immediate removal of non-consensual intimate content hosted on ${params.domain}.\n\n${caseLine}${networkLine}${routeLine}${contentLine}\nThis content violates privacy and consent, and I request removal of all copies, previews, and cached variants.\n\nPlease confirm action within 48 hours.\n\nRegards,\n[Your Name]\n${date}`;
+}
+
+function formatDomainLabel(value?: string | null) {
+  if (!value) return "Unknown domain";
+  return value.trim().toLowerCase();
+}
+
+function formatTitleCase(value?: string | null, fallback = "Unknown") {
+  if (!value) return fallback;
+  return value
+    .replace(/_/g, " ")
+    .replace(/(^|\s)\S/g, (match) => match.toUpperCase());
+}
+
+function getTakedownStatusStyle(status?: string | null) {
+  if (!status) return TAKEDOWN_STATUS_STYLES.not_found;
+  return TAKEDOWN_STATUS_STYLES[status] ?? {
+    label: formatTitleCase(status, "Unknown"),
+    badge: "border-stone-200 bg-stone-50 text-stone-600",
+    dot: "bg-stone-400",
+  };
+}
+
+function PlatformLogo({ domain, size = 68 }: { domain?: string | null; size?: number }) {
+  const normalizedDomain = formatDomainLabel(domain);
+  const [logoMissing, setLogoMissing] = useState(false);
+
+  if (!domain || logoMissing) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-[22px] border border-white/70 bg-white/80 text-[#0a0a0a] shadow-[0_12px_32px_rgba(15,23,42,0.08)]"
+        style={{ width: size, height: size }}
+      >
+        <span className="font-mono text-[15px] uppercase tracking-[0.24em] text-[#6b7280]">
+          {normalizedDomain.slice(0, 2) || "--"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`/supported-platforms/${normalizedDomain}.webp`}
+      alt={`${normalizedDomain} logo`}
+      width={size}
+      height={size}
+      onError={() => setLogoMissing(true)}
+      className="rounded-[22px] border border-white/70 bg-white/90 object-contain p-3 shadow-[0_12px_32px_rgba(15,23,42,0.08)]"
+    />
+  );
 }
 
 function TakedownPageInner() {
@@ -390,6 +468,11 @@ function TakedownPageInner() {
   }
 
   const cybercrimePrimaryUrl = contentUrl.trim() || autoDetectedUrls[0] || "Not provided";
+  const normalizedDomain = formatDomainLabel(domainFromQuery);
+  const takedownStatus = getTakedownStatusStyle(domainTakedown?.status);
+  const routeHeadline = domainTakedown?.removal_page || domainTakedown?.contact_email
+    ? "Ready to submit"
+    : "Manual escalation likely";
 
   function copyGuidedNotice() {
     if (!guidedNotice) return;
@@ -499,29 +582,69 @@ function TakedownPageInner() {
               </div>
             )}
 
-            <div className="rounded-xl border border-[#e8e4de] bg-white overflow-hidden">
-              <div className="px-5 py-3 border-b border-[#f0ede8] bg-[#fafaf8] flex items-center justify-between gap-3">
-                <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest">Resolved takedown route</p>
-                {domainTakedown?.status && (
-                  <span className="text-[10px] font-mono text-[#6b7280] uppercase tracking-widest">{domainTakedown.status.replace(/_/g, " ")}</span>
-                )}
+            <div className="overflow-hidden rounded-[28px] border border-[#ddd6fe] bg-[linear-gradient(145deg,#eef2ff_0%,#ffffff_42%,#f8fafc_100%)] shadow-[0_28px_80px_rgba(99,102,241,0.12)]">
+              <div className="border-b border-white/70 px-5 py-4 backdrop-blur-sm sm:px-6">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[10px] font-mono text-[#7c83b6] uppercase tracking-[0.28em]">Detected platform profile</p>
+                  <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.22em] ${takedownStatus.badge}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${takedownStatus.dot}`} />
+                    {takedownStatus.label}
+                  </span>
+                </div>
               </div>
-              <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Domain</p>
-                  <p className="text-[12.5px] text-[#0a0a0a] font-medium">{domainFromQuery}</p>
+
+              <div className="px-5 py-5 sm:px-6 sm:py-6">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <PlatformLogo domain={normalizedDomain} />
+                    <div className="min-w-0">
+                      <p className="mb-1 text-[11px] font-mono uppercase tracking-[0.24em] text-[#7c83b6]">Target destination</p>
+                      <h2 className="break-all text-[24px] font-semibold tracking-tight text-[#111827] sm:text-[28px]">
+                        {normalizedDomain}
+                      </h2>
+                      <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[#5b6475]">
+                        {routeHeadline}. Sniffer resolved the takedown path, contact surface, and hosting context for this detected platform.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid min-w-45 grid-cols-2 gap-3 sm:grid-cols-1 sm:justify-items-end">
+                    <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-[0_10px_24px_rgba(148,163,184,0.14)]">
+                      <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Source</p>
+                      <p className="mt-1 text-[13px] font-medium text-[#0f172a]">{formatTitleCase(domainTakedown?.source, "Dataset")}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-[0_10px_24px_rgba(148,163,184,0.14)]">
+                      <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Confidence</p>
+                      <p className="mt-1 text-[13px] font-medium text-[#0f172a]">{Math.round((domainTakedown?.confidence ?? 0) * 100)}%</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Network</p>
-                  <p className="text-[12.5px] text-[#0a0a0a] font-medium">{domainIntel?.network ?? "Unknown"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Removal Method</p>
-                  <p className="text-[12.5px] text-[#0a0a0a] font-medium">{domainTakedown?.removal_type?.replace(/_/g, " ") ?? "Manual submission"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Contact Email</p>
-                  <p className="text-[12.5px] text-[#0a0a0a] font-medium break-all">{domainTakedown?.contact_email ?? "Not listed"}</p>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Hosting Network</p>
+                    <p className="mt-1 text-[14px] font-semibold text-[#111827]">{domainIntel?.network ?? "Unknown"}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">Use this when escalating beyond the platform itself.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">CDN / Provider</p>
+                    <p className="mt-1 text-[14px] font-semibold text-[#111827]">{domainIntel?.cdn_provider ?? "Unknown"}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">{formatTitleCase(domainIntel?.provider_type, "Infrastructure not classified")}</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Removal Method</p>
+                    <p className="mt-1 text-[14px] font-semibold text-[#111827]">{formatTitleCase(domainTakedown?.removal_type, "Manual submission")}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">Preferred path resolved from Sniffer takedown intelligence.</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Contact Surface</p>
+                    <p className="mt-1 break-all text-[14px] font-semibold text-[#111827]">{domainTakedown?.contact_email ?? domainTakedown?.removal_page ?? "No direct contact found"}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">
+                      {domainTakedown?.contact_email || domainTakedown?.removal_page
+                        ? "Primary route Sniffer will help you act on next."
+                        : "Fallback actions below will help you continue manually."}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

@@ -72,7 +72,19 @@ interface DiscoveryTraceResult {
   direct_matches: Array<{
     domain: string;
     page_url: string;
+    network?: string | null;
   }>;
+}
+
+interface BulkTarget {
+  domain: string;
+  network?: string | null;
+  pageUrls: string[];
+}
+
+interface BulkGuidanceEntry {
+  intel: DomainIntelligenceResult | null;
+  takedown: DomainTakedownResult | null;
 }
 
 interface CaseSummary {
@@ -101,6 +113,36 @@ function buildCaseRef(caseId: string) {
   }
   const compact = caseId.replace(/-/g, "").toUpperCase();
   return `SNF-${compact.slice(0, 4)}-${compact.slice(4, 8)}-${compact.slice(8, 12)}`;
+}
+
+function pushUnique(values: string[], value?: string | null) {
+  if (!value) return;
+  if (!values.includes(value)) {
+    values.push(value);
+  }
+}
+
+function buildBulkTargets(trace: DiscoveryTraceResult | null): BulkTarget[] {
+  if (!trace) return [];
+
+  const grouped = new Map<string, BulkTarget>();
+
+  for (const match of trace.direct_matches) {
+    const existing = grouped.get(match.domain);
+    if (!existing) {
+      grouped.set(match.domain, {
+        domain: match.domain,
+        network: match.network,
+        pageUrls: match.page_url ? [match.page_url] : [],
+      });
+      continue;
+    }
+
+    existing.network = existing.network ?? match.network;
+    pushUnique(existing.pageUrls, match.page_url);
+  }
+
+  return Array.from(grouped.values()).sort((a, b) => a.domain.localeCompare(b.domain));
 }
 
 function buildGuidedNotice(params: {
@@ -175,16 +217,24 @@ function TakedownPageInner() {
   const caseIdFromQuery = searchParams.get("caseId")?.trim() || null;
   const domainFromQuery = searchParams.get("domain")?.trim() || null;
   const isGuidedFlow = Boolean(domainFromQuery);
+  const isBulkFlow = Boolean(caseIdFromQuery && !domainFromQuery);
 
   const [guidanceLoading, setGuidanceLoading] = useState(false);
   const [guidanceError, setGuidanceError] = useState<string | null>(null);
   const [domainTakedown, setDomainTakedown] = useState<DomainTakedownResult | null>(null);
   const [domainIntel, setDomainIntel] = useState<DomainIntelligenceResult | null>(null);
+  const [bulkTrace, setBulkTrace] = useState<DiscoveryTraceResult | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkLookupLoading, setBulkLookupLoading] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkGuidance, setBulkGuidance] = useState<Record<string, BulkGuidanceEntry>>({});
   const [caseSummary, setCaseSummary] = useState<CaseSummary | null>(null);
   const [contentUrl, setContentUrl] = useState("");
   const [autoDetectedUrls, setAutoDetectedUrls] = useState<string[]>([]);
   const [guidedCopied, setGuidedCopied] = useState(false);
+  const [bulkCopied, setBulkCopied] = useState(false);
   const [cybercrimeCopied, setCybercrimeCopied] = useState(false);
+  const [bulkDownloaded, setBulkDownloaded] = useState(false);
   const [origin, setOrigin] = useState("");
 
   const [file, setFile] = useState<File | null>(null);
@@ -283,6 +333,94 @@ function TakedownPageInner() {
       cancelled = true;
     };
   }, [caseIdFromQuery, domainFromQuery, isGuidedFlow]);
+
+  useEffect(() => {
+    if (!isBulkFlow || !caseIdFromQuery) return;
+    const caseId = caseIdFromQuery;
+
+    let cancelled = false;
+
+    async function loadBulkTrace() {
+      setBulkLoading(true);
+      setBulkError(null);
+      setBulkTrace(null);
+
+      try {
+        const res = await fetch(`${API_URL}/api/analysis/${encodeURIComponent(caseId)}/discover`, {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error("Could not load discovered domains for this case.");
+        }
+
+        const data = (await res.json()) as DiscoveryTraceResult;
+        if (!cancelled) {
+          setBulkTrace(data);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setBulkError(e instanceof Error ? e.message : "Could not load discovered domains for this case.");
+        }
+      } finally {
+        if (!cancelled) {
+          setBulkLoading(false);
+        }
+      }
+    }
+
+    void loadBulkTrace();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [caseIdFromQuery, isBulkFlow]);
+
+  const bulkTargets = useMemo(() => buildBulkTargets(bulkTrace), [bulkTrace]);
+
+  useEffect(() => {
+    if (!isBulkFlow || bulkTargets.length === 0) {
+      setBulkGuidance({});
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadBulkGuidance() {
+      setBulkLookupLoading(true);
+      setBulkGuidance({});
+
+      const entries = await Promise.all(
+        bulkTargets.map(async (target) => {
+          const [takedownRes, intelRes] = await Promise.allSettled([
+            fetch(`/api/takedown/${encodeURIComponent(target.domain)}`),
+            fetch(`/api/intelligence/${encodeURIComponent(target.domain)}`),
+          ]);
+
+          const takedown = takedownRes.status === "fulfilled" && takedownRes.value.ok
+            ? (await takedownRes.value.json()) as DomainTakedownResult
+            : null;
+
+          const intel = intelRes.status === "fulfilled" && intelRes.value.ok
+            ? (await intelRes.value.json()) as DomainIntelligenceResult
+            : null;
+
+          return [target.domain, { takedown, intel }] as const;
+        }),
+      );
+
+      if (cancelled) return;
+
+      setBulkGuidance(Object.fromEntries(entries));
+      setBulkLookupLoading(false);
+    }
+
+    void loadBulkGuidance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bulkTargets, isBulkFlow]);
 
   useEffect(() => {
     if (!caseIdFromQuery) return;
@@ -473,6 +611,83 @@ function TakedownPageInner() {
   const routeHeadline = domainTakedown?.removal_page || domainTakedown?.contact_email
     ? "Ready to submit"
     : "Manual escalation likely";
+  const bulkNotice = useMemo(() => {
+    if (!caseIdFromQuery || bulkTargets.length === 0) return "";
+
+    const caseRef = buildCaseRef(caseIdFromQuery);
+    const reportUrl = origin ? `${origin}/report/${caseIdFromQuery}` : `/report/${caseIdFromQuery}`;
+    const lines: string[] = [
+      `Subject: Bulk NCII takedown escalation for ${caseRef}`,
+      "",
+      "To the Trust & Safety / Abuse Teams,",
+      "",
+      `I am submitting a consolidated takedown escalation for NCII case ${caseRef}. The same harmful content was discovered across multiple domains and should be removed wherever it appears, including mirrored pages, previews, and cached assets.`,
+      "",
+      "Case summary:",
+      `- Case reference: ${caseRef}`,
+      `- Investigation type: NCII leak discovery`,
+      `- Case report: ${reportUrl}`,
+      `- Domains detected: ${bulkTargets.length}`,
+      "",
+      "Platform evidence:",
+    ];
+
+    bulkTargets.forEach((target, index) => {
+      const guidance = bulkGuidance[target.domain];
+      lines.push(
+        "",
+        `${index + 1}. Domain: ${target.domain}`,
+        `   Network: ${guidance?.intel?.network ?? target.network ?? "Unknown"}`,
+        `   CDN / Provider: ${guidance?.intel?.cdn_provider ?? "Unknown"}`,
+        `   Removal route: ${formatTitleCase(guidance?.takedown?.removal_type, "Manual submission")}`,
+        `   Abuse contact: ${guidance?.takedown?.contact_email ?? guidance?.takedown?.removal_page ?? "No contact found"}`,
+      );
+
+      if (target.pageUrls.length > 0) {
+        lines.push("   Matched URLs:");
+        target.pageUrls.forEach((url) => lines.push(`   - ${url}`));
+      }
+    });
+
+    lines.push(
+      "",
+      "Requested actions:",
+      "1. Remove the detected content and mirrored variants from each listed domain.",
+      "2. Disable previews, cached assets, and reposts derived from the same content.",
+      "3. Confirm removal or escalation status for each domain or provide the correct abuse route.",
+      "",
+      "This packet was prepared from a single investigation report so that all affected domains can be handled together without re-entering evidence for each platform.",
+      "",
+      "Regards,",
+      "Case holder",
+    );
+
+    return lines.join("\n");
+  }, [bulkGuidance, bulkTargets, caseIdFromQuery, origin]);
+
+  function copyBulkNotice() {
+    if (!bulkNotice) return;
+    navigator.clipboard.writeText(bulkNotice).then(() => {
+      setBulkCopied(true);
+      setTimeout(() => setBulkCopied(false), 2500);
+    });
+  }
+
+  function downloadBulkNotice() {
+    if (!bulkNotice) return;
+    const caseRef = caseIdFromQuery ? buildCaseRef(caseIdFromQuery) : "bulk";
+    const blob = new Blob([bulkNotice], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `takedown-${caseRef}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setBulkDownloaded(true);
+    setTimeout(() => setBulkDownloaded(false), 2500);
+  }
 
   function copyGuidedNotice() {
     if (!guidedNotice) return;
@@ -522,6 +737,8 @@ function TakedownPageInner() {
           <p className="text-[13.5px] text-[#6b7280] leading-relaxed max-w-prose">
             {isGuidedFlow
               ? "This final step uses the target domain from Investigate. Review the resolved contact route, copy your notice, and submit it."
+              : isBulkFlow
+                ? "This case-wide workspace keeps every discovered platform together. Use bulk copy for the whole case, or drop into an individual domain when a platform needs its own form or email."
               : "Standalone mode: upload an image and generate a general takedown notice from registry and platform signals."
             }
           </p>
@@ -582,12 +799,12 @@ function TakedownPageInner() {
               </div>
             )}
 
-            <div className="overflow-hidden rounded-[28px] border border-[#ddd6fe] bg-[linear-gradient(145deg,#eef2ff_0%,#ffffff_42%,#f8fafc_100%)] shadow-[0_28px_80px_rgba(99,102,241,0.12)]">
-              <div className="border-b border-white/70 px-5 py-4 backdrop-blur-sm sm:px-6">
+            <div className="overflow-hidden rounded-lg border border-[#e8e4de] bg-white">
+              <div className="border-b border-[#e8e4de] px-5 py-4 sm:px-6">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[10px] font-mono text-[#7c83b6] uppercase tracking-[0.28em]">Detected platform profile</p>
-                  <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-mono uppercase tracking-[0.22em] ${takedownStatus.badge}`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${takedownStatus.dot}`} />
+                  <p className="text-[11px] font-mono text-[#9ca3af] uppercase tracking-[0.22em]">Hosting Details</p>
+                  <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-[0.22em] border-[#e8e4de] bg-[#fafaf8] text-[#6b7280]`}>
+                    <span className="h-1 w-1 rounded-full bg-[#6b7280]" />
                     {takedownStatus.label}
                   </span>
                 </div>
@@ -595,55 +812,47 @@ function TakedownPageInner() {
 
               <div className="px-5 py-5 sm:px-6 sm:py-6">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-start gap-4">
-                    <PlatformLogo domain={normalizedDomain} />
+                  <div className="flex items-start gap-3">
+                    <PlatformLogo domain={normalizedDomain} size={56} />
                     <div className="min-w-0">
-                      <p className="mb-1 text-[11px] font-mono uppercase tracking-[0.24em] text-[#7c83b6]">Target destination</p>
-                      <h2 className="break-all text-[24px] font-semibold tracking-tight text-[#111827] sm:text-[28px]">
+                      <p className="mb-1 text-[11px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Target Domain</p>
+                      <h2 className="break-all text-[20px] font-semibold text-[#0a0a0a] sm:text-[24px]">
                         {normalizedDomain}
                       </h2>
-                      <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[#5b6475]">
-                        {routeHeadline}. Sniffer resolved the takedown path, contact surface, and hosting context for this detected platform.
+                      <p className="mt-2 max-w-lg text-[12px] leading-relaxed text-[#6b7280]">
+                        {routeHeadline}. Takedown path and contact resolved.
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid min-w-45 grid-cols-2 gap-3 sm:grid-cols-1 sm:justify-items-end">
-                    <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-[0_10px_24px_rgba(148,163,184,0.14)]">
-                      <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Source</p>
-                      <p className="mt-1 text-[13px] font-medium text-[#0f172a]">{formatTitleCase(domainTakedown?.source, "Dataset")}</p>
+                  <div className="grid min-w-45 grid-cols-2 gap-2 sm:grid-cols-1 sm:justify-items-end">
+                    <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-3">
+                      <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Source</p>
+                      <p className="mt-1 text-[12px] font-medium text-[#0a0a0a]">{formatTitleCase(domainTakedown?.source, "Dataset")}</p>
                     </div>
-                    <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-[0_10px_24px_rgba(148,163,184,0.14)]">
-                      <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Confidence</p>
-                      <p className="mt-1 text-[13px] font-medium text-[#0f172a]">{Math.round((domainTakedown?.confidence ?? 0) * 100)}%</p>
+                    <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-3">
+                      <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Confidence</p>
+                      <p className="mt-1 text-[12px] font-medium text-[#0a0a0a]">{Math.round((domainTakedown?.confidence ?? 0) * 100)}%</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Hosting Network</p>
-                    <p className="mt-1 text-[14px] font-semibold text-[#111827]">{domainIntel?.network ?? "Unknown"}</p>
-                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">Use this when escalating beyond the platform itself.</p>
+                <div className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Hosting Network</p>
+                    <p className="mt-1 text-[13px] font-medium text-[#0a0a0a]">{domainIntel?.network ?? "Unknown"}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">CDN / Provider</p>
-                    <p className="mt-1 text-[14px] font-semibold text-[#111827]">{domainIntel?.cdn_provider ?? "Unknown"}</p>
-                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">{formatTitleCase(domainIntel?.provider_type, "Infrastructure not classified")}</p>
+                  <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">CDN / Provider</p>
+                    <p className="mt-1 text-[13px] font-medium text-[#0a0a0a]">{domainIntel?.cdn_provider ?? "Unknown"}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Removal Method</p>
-                    <p className="mt-1 text-[14px] font-semibold text-[#111827]">{formatTitleCase(domainTakedown?.removal_type, "Manual submission")}</p>
-                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">Preferred path resolved from Sniffer takedown intelligence.</p>
+                  <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Removal Method</p>
+                    <p className="mt-1 text-[13px] font-medium text-[#0a0a0a]">{formatTitleCase(domainTakedown?.removal_type, "Manual submission")}</p>
                   </div>
-                  <div className="rounded-2xl border border-white/75 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(148,163,184,0.12)]">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9aa1b5]">Contact Surface</p>
-                    <p className="mt-1 break-all text-[14px] font-semibold text-[#111827]">{domainTakedown?.contact_email ?? domainTakedown?.removal_page ?? "No direct contact found"}</p>
-                    <p className="mt-2 text-[12px] leading-relaxed text-[#6b7280]">
-                      {domainTakedown?.contact_email || domainTakedown?.removal_page
-                        ? "Primary route Sniffer will help you act on next."
-                        : "Fallback actions below will help you continue manually."}
-                    </p>
+                  <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Contact</p>
+                    <p className="mt-1 break-all text-[12px] font-medium text-[#0a0a0a]">{domainTakedown?.contact_email ?? domainTakedown?.removal_page ?? "No contact found"}</p>
                   </div>
                 </div>
               </div>
@@ -651,15 +860,15 @@ function TakedownPageInner() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest">Final Notice (Domain-specific)</p>
+                <p className="text-[11px] font-mono text-[#9ca3af] uppercase tracking-[0.22em]">Removal Notice</p>
                 <button
                   onClick={copyGuidedNotice}
                   className="flex items-center gap-1.5 text-[11px] text-[#6b7280] hover:text-[#0a0a0a] border border-[#e8e4de] px-3 py-1 rounded-lg transition-colors"
                 >
-                  {guidedCopied ? "Copied!" : "Copy Notice"}
+                  {guidedCopied ? "Copied!" : "Copy"}
                 </button>
               </div>
-              <pre className="rounded-xl border border-[#e8e4de] bg-white px-5 py-4 text-[11.5px] text-[#374151] leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-80">
+              <pre className="rounded-lg border border-[#e8e4de] bg-white px-4 py-3 text-[11px] text-[#374151] leading-relaxed whitespace-pre-wrap font-mono overflow-auto max-h-80">
                 {guidedNotice}
               </pre>
             </div>
@@ -670,18 +879,18 @@ function TakedownPageInner() {
                   href={domainTakedown.removal_page}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a0a0a] px-4 py-2 text-[12px] font-medium text-white hover:bg-[#1a1a1a] transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a0a0a] px-4 py-2 text-[11px] font-medium text-white hover:bg-[#1a1a1a] transition-colors"
                 >
-                  Open Removal Form
+                  Removal Form
                 </a>
               )}
 
               {domainTakedown?.contact_email && (
                 <a
                   href={`mailto:${domainTakedown.contact_email}?subject=${encodeURIComponent(`Urgent takedown request - ${domainFromQuery}`)}&body=${encodeURIComponent(guidedNotice)}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-4 py-2 text-[12px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-4 py-2 text-[11px] font-medium text-[#0a0a0a] hover:bg-[#fafaf8] transition-colors"
                 >
-                  Open Email Draft
+                  Email Draft
                 </a>
               )}
 
@@ -690,9 +899,9 @@ function TakedownPageInner() {
                   href={cybercrimeGmailHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-[12px] font-medium text-red-700 hover:border-red-300 hover:bg-red-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-4 py-2 text-[11px] font-medium text-[#0a0a0a] hover:bg-[#fafaf8] transition-colors"
                 >
-                  Report to Cybercrime Authority
+                  Report to Authority
                 </a>
               )}
 
@@ -729,6 +938,200 @@ function TakedownPageInner() {
             <p className="text-[11.5px] text-[#9ca3af] leading-relaxed">
               Click "Report to Cybercrime Authority", then use "Copy Full Complaint", and attach the report PDF from <span className="font-mono">{caseIdFromQuery ? `${origin}/report/${caseIdFromQuery}` : "your case report"}</span> before sending to {CYBERCRIME_EMAIL}. Primary URL: <span className="font-mono">{cybercrimePrimaryUrl}</span>
             </p>
+          </div>
+        ) : isBulkFlow ? (
+          <div className="space-y-5">
+            <div className="rounded-lg border border-[#e8e4de] bg-white px-5 py-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Bulk Takedown</p>
+                  <h2 className="mt-2 text-[20px] font-semibold text-[#0a0a0a]">All discovered platforms in one workspace</h2>
+                  <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-[#6b7280]">
+                    Individual platform routes still matter because each domain can have a different removal form or abuse inbox. This view keeps them together so you can send one structured escalation packet first, then handle domain-specific submission where needed.
+                  </p>
+                </div>
+                <Link
+                  href={caseIdFromQuery ? `/report/${caseIdFromQuery}` : "/start"}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-2 text-[12px] font-medium text-[#0a0a0a] hover:bg-white transition-colors"
+                >
+                  Back to report
+                </Link>
+              </div>
+            </div>
+
+            {bulkLoading ? (
+              <div className="rounded-lg border border-[#e8e4de] bg-white p-5 animate-pulse space-y-3">
+                <div className="h-3 w-40 rounded bg-[#f0ede8]" />
+                <div className="h-12 w-full rounded bg-[#f0ede8]" />
+                <div className="h-12 w-full rounded bg-[#f0ede8]" />
+              </div>
+            ) : bulkError ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700">
+                {bulkError}
+              </div>
+            ) : bulkTargets.length === 0 ? (
+              <div className="rounded-lg border border-[#e8e4de] bg-white px-5 py-5">
+                <p className="text-[13px] font-medium text-[#0a0a0a]">No discovered platforms available yet</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-[#6b7280]">
+                  The case does not have any direct discovery matches yet, so there is nothing to issue in bulk. Re-run the leak scan or use the individual flow once matches exist.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-lg border border-[#e8e4de] bg-white overflow-hidden">
+                  <div className="border-b border-[#e8e4de] px-5 py-4 sm:px-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Case-Wide Escalation Packet</p>
+                        <p className="mt-1 text-[12px] text-[#6b7280]">{bulkTargets.length} platform{bulkTargets.length === 1 ? "" : "s"} · ready to send</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={downloadBulkNotice}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-1.5 text-[11px] font-medium text-[#0a0a0a] hover:bg-white transition-colors"
+                        >
+                          <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" strokeLinecap="round" />
+                            <polyline points="7 10 12 15 17 10" strokeLinecap="round" strokeLinejoin="round" />
+                            <line x1="12" y1="15" x2="12" y2="3" strokeLinecap="round" />
+                          </svg>
+                          {bulkDownloaded ? "Saved" : "Download .txt"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={copyBulkNotice}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-1.5 text-[11px] font-medium text-[#0a0a0a] hover:bg-white transition-colors"
+                        >
+                          {bulkCopied ? "Copied" : "Copy"}
+                        </button>
+                        {caseIdFromQuery && (
+                          <a
+                            href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(`Bulk NCII takedown escalation — ${buildCaseRef(caseIdFromQuery)}`)}&body=${encodeURIComponent(bulkNotice)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a0a0a] px-3 py-1.5 text-[11px] font-medium text-white hover:bg-[#1a1a1a] transition-colors"
+                          >
+                            Open in Gmail
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-5 py-4 sm:px-6 space-y-4">
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                        <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Coverage</p>
+                        <p className="mt-1 text-[13px] font-medium text-[#0a0a0a]">{bulkTargets.length} domains</p>
+                      </div>
+                      <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                        <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Matched URLs</p>
+                        <p className="mt-1 text-[13px] font-medium text-[#0a0a0a]">{bulkTargets.reduce((sum, target) => sum + target.pageUrls.length, 0)} total URLs</p>
+                      </div>
+                      <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                        <p className="text-[9px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">Purpose</p>
+                        <p className="mt-1 text-[13px] font-medium text-[#0a0a0a]">One submission packet</p>
+                      </div>
+                    </div>
+                    {bulkLookupLoading && (
+                      <p className="text-[11px] text-[#9ca3af]">Resolving platform routes for all detected domains…</p>
+                    )}
+                    <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                      <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#9ca3af]">How to use this</p>
+                      <p className="mt-1 text-[12px] leading-relaxed text-[#6b7280]">
+                        Copy this packet for the first escalation pass. Then use the individual platform cards below when a site needs its own portal submission or domain-specific email draft.
+                      </p>
+                    </div>
+                    <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-4 font-mono text-[11.5px] leading-relaxed text-[#374151]">
+                      {bulkNotice}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {bulkTargets.map((target) => {
+                    const guidance = bulkGuidance[target.domain];
+
+                    return (
+                      <div key={target.domain} className="rounded-lg border border-[#e8e4de] bg-white overflow-hidden">
+                        {/* Card header: logo + domain + actions */}
+                        <div className="flex flex-col gap-4 border-b border-[#e8e4de] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <PlatformLogo domain={target.domain} size={44} />
+                            <div className="min-w-0">
+                              <p className="text-[15px] font-semibold text-[#0a0a0a] break-all">{target.domain}</p>
+                              <span className="inline-flex items-center rounded-full border border-[#e8e4de] bg-[#fafaf8] px-2 py-0.5 text-[10px] font-mono text-[#6b7280] mt-1">
+                                {target.pageUrls.length} matched URL{target.pageUrls.length === 1 ? "" : "s"}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 shrink-0">
+                            <Link
+                              href={`/investigate?caseId=${encodeURIComponent(caseIdFromQuery ?? "")}&domain=${encodeURIComponent(target.domain)}`}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-3.5 py-2 text-[12px] font-medium text-[#374151] transition-colors hover:border-[#0a0a0a]"
+                            >
+                              Investigate
+                            </Link>
+                            <Link
+                              href={`/takedown?caseId=${encodeURIComponent(caseIdFromQuery ?? "")}&domain=${encodeURIComponent(target.domain)}`}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a0a0a] px-3.5 py-2 text-[12px] font-medium text-white transition-colors hover:bg-[#1a1a1a]"
+                            >
+                              Individual takedown
+                            </Link>
+                            {guidance?.takedown?.removal_page && (
+                              <a
+                                href={guidance.takedown.removal_page}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3.5 py-2 text-[12px] font-medium text-[#0a0a0a] hover:bg-white transition-colors"
+                              >
+                                Open portal
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        {/* Card body: metadata tiles + URL list */}
+                        <div className="px-5 py-4 space-y-3">
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-2.5">
+                              <p className="text-[9px] font-mono text-[#9ca3af] uppercase tracking-widest">Network</p>
+                              <p className="mt-1 text-[12px] font-medium text-[#0a0a0a] truncate">{guidance?.intel?.network ?? target.network ?? "—"}</p>
+                            </div>
+                            <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-2.5">
+                              <p className="text-[9px] font-mono text-[#9ca3af] uppercase tracking-widest">Route</p>
+                              <p className="mt-1 text-[12px] font-medium text-[#0a0a0a] truncate">{guidance?.takedown?.removal_type ?? "—"}</p>
+                            </div>
+                            <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3 py-2.5">
+                              <p className="text-[9px] font-mono text-[#9ca3af] uppercase tracking-widest">Contact</p>
+                              <p className="mt-1 text-[12px] font-medium text-[#0a0a0a] truncate">{guidance?.takedown?.contact_email ?? "—"}</p>
+                            </div>
+                          </div>
+                          {target.pageUrls.length > 0 && (
+                            <div className="space-y-1">
+                              {target.pageUrls.slice(0, 3).map((url) => (
+                                <a
+                                  key={url}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1.5 rounded-md border border-[#e8e4de] bg-[#fafaf8] px-3 py-1.5 text-[11px] font-mono text-[#6b7280] hover:text-[#0a0a0a] transition-colors"
+                                >
+                                  <span className="text-[#9ca3af] shrink-0">↗</span>
+                                  <span className="truncate">{url}</span>
+                                </a>
+                              ))}
+                              {target.pageUrls.length > 3 && (
+                                <p className="pl-2 text-[10px] font-mono text-[#9ca3af]">+{target.pageUrls.length - 3} more URLs in individual workspace</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         ) : !result ? (
           <div className="space-y-5">

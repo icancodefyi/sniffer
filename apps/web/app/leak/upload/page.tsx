@@ -24,6 +24,7 @@ function LeakUploadContent() {
   const [preview, setPreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanStep, setScanStep] = useState(0);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,6 +64,7 @@ function LeakUploadContent() {
     if (!file || !caseId) return;
     setScanning(true);
     setScanStep(0);
+    setProcessing(false);
     setError(null);
 
     if (preview) await storePreview(preview, `sniffer_suspicious_${caseId}`);
@@ -96,11 +98,15 @@ function LeakUploadContent() {
         throw new Error(err.detail || "Scan failed to start");
       }
 
-      await new Promise<void>((res) => setTimeout(res, 400));
+      // Show processing screen for 5 seconds
+      setScanning(false);
+      setProcessing(true);
+      await new Promise<void>((res) => setTimeout(res, 5000));
       router.push(`/report/${caseId}`);
     } catch (e) {
       clearInterval(interval);
       setScanning(false);
+      setProcessing(false);
       setError(e instanceof Error ? e.message : "Scan failed. Please try again.");
     }
   }
@@ -166,6 +172,16 @@ function LeakUploadContent() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Processing overlay */}
+      {processing && (
+        <div className="fixed inset-0 z-50 bg-[#fafaf8]/90 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-7 h-7 border-2 border-[#e8e4de] border-t-[#0a0a0a] rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-[13px] text-[#9ca3af] font-mono">Preparing your report…</p>
           </div>
         </div>
       )}

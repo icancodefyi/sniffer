@@ -143,6 +143,9 @@ export default function StartPage() {
                 Case Manager, Evidence Report Generator, and Threat Scoring are shared. Each pipeline produces a 
                 case ID you can save, revisit, and reference in legal correspondence.
               </p>
+              <Link href="/supported-platforms" className="inline-flex mt-2 text-[11.5px] text-rose-600 hover:underline">
+                View Supported Platforms →
+              </Link>
             </div>
           </div>
         </div>

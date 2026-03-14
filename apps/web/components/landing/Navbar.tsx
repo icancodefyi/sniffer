@@ -5,11 +5,28 @@ import Image from "next/image";
 import { useTranslation } from "@/components/i18n/LanguageProvider";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 
-const NAV_HREFS = [
-  { key: "howItWorks" as const, href: "#how-it-works" },
-  { key: "resources" as const, href: "/resources" },
-  { key: "dashboard" as const, href: "/dashboard" },
+type NavItem = {
+  id: string;
+  key: NavKey;
+  href: string;
+  label?: string;
+};
+
+type NavKey =
+  | "howItWorks"
+  | "resources"
+  | "dashboard"
+  | "supportedPlatforms";
+
+const NAV_HREFS: NavItem[] = [
+  { id: "how-it-works", key: "howItWorks", href: "#how-it-works" },
+  { id: "resources", key: "resources", href: "/resources" },
+  { id: "supported-platforms", key: "supportedPlatforms", href: "/supported-platforms", label: "Supported Platforms" },
+  { id: "dashboard", key: "dashboard", href: "/dashboard" },
 ];
+
+
+
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -49,12 +66,13 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           {NAV_HREFS.map((item) => (
             <Link
-              key={item.key}
+              key={item.id}
               href={item.href}
               className="flex items-center gap-0.5 text-[12.5px] font-medium transition-colors hover:text-[#0a0a0a]"
               style={{ color: "#7a7268", letterSpacing: "0.04em" }}
             >
-              {t.nav[item.key]}
+           {item.label || t.nav[item.key as keyof typeof t.nav]}
+
               <span className="text-[9px] ml-0.5" style={{ color: "#b0a89e" }}>›</span>
             </Link>
           ))}
@@ -114,7 +132,7 @@ export function Navbar() {
         >
           {NAV_HREFS.map((item) => (
             <Link
-              key={item.key}
+              key={item.id}
               href={item.href}
               onClick={() => setMenuOpen(false)}
               className="py-3.5 text-[13px] font-medium border-b last:border-0 transition-colors hover:text-[#0a0a0a]"
@@ -124,7 +142,8 @@ export function Navbar() {
                 borderColor: "#f0ede8",
               }}
             >
-              {t.nav[item.key]}
+          {item.label || t.nav[item.key as keyof typeof t.nav]}
+
             </Link>
           ))}
           <div className="mt-5 flex flex-col gap-3">

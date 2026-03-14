@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -92,7 +92,7 @@ function buildGuidedNotice(params: {
   return `Subject: Urgent removal request for non-consensual content on ${params.domain}\n\nDear Trust & Safety Team,\n\nI am requesting immediate removal of non-consensual intimate content hosted on ${params.domain}.\n\n${caseLine}${networkLine}${routeLine}${contentLine}\nThis content violates privacy and consent, and I request removal of all copies, previews, and cached variants.\n\nPlease confirm action within 48 hours.\n\nRegards,\n[Your Name]\n${date}`;
 }
 
-export default function TakedownPage() {
+function TakedownPageInner() {
   const searchParams = useSearchParams();
   const caseIdFromQuery = searchParams.get("caseId")?.trim() || null;
   const domainFromQuery = searchParams.get("domain")?.trim() || null;
@@ -744,5 +744,13 @@ export default function TakedownPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function TakedownPage() {
+  return (
+    <Suspense>
+      <TakedownPageInner />
+    </Suspense>
   );
 }

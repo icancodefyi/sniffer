@@ -100,10 +100,10 @@ export default function ProtectPage() {
         <span className="text-[13px] text-[#9ca3af]">Protect Your Images</span>
         <div className="ml-auto">
           <Link
-            href="/verify"
+            href="/start"
             className="text-[12px] text-[#6b7280] hover:text-[#0a0a0a] border border-[#e8e4de] px-3 py-1.5 rounded-lg transition-colors"
           >
-            Verify an Image
+            Start Investigation
           </Link>
         </div>
       </header>

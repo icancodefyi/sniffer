@@ -5,6 +5,7 @@ export interface CaseData {
   platform_source: string;
   issue_type: string;
   description?: string | null;
+  pipeline_type?: "deepfake" | "ncii" | string | null;
 }
 
 export interface AlgorithmSignal {

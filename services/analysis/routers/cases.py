@@ -13,6 +13,7 @@ class CaseCreate(BaseModel):
     platform_source: str  # Instagram | Telegram | Twitter / X | WhatsApp | Facebook | Other
     issue_type: str       # Deepfake / face swap | Edited image | Harassment / blackmail | Fake news | Other
     description: Optional[str] = None
+    pipeline_type: Optional[str] = "deepfake"  # deepfake | ncii
 
 
 class CaseResponse(BaseModel):
@@ -22,6 +23,7 @@ class CaseResponse(BaseModel):
     platform_source: str
     issue_type: str
     description: Optional[str]
+    pipeline_type: Optional[str] = "deepfake"
 
 
 # In-memory store — replace with PostgreSQL in production
@@ -42,6 +44,7 @@ def create_case(payload: CaseCreate):
         "platform_source": payload.platform_source,
         "issue_type": payload.issue_type,
         "description": payload.description,
+        "pipeline_type": payload.pipeline_type or "deepfake",
     }
     _cases[case_id] = record
     return record

@@ -48,6 +48,7 @@ export default function VerifyPage() {
           platform_source: platform,
           issue_type: issueType,
           description: description.trim() || undefined,
+          pipeline_type: "deepfake",
         }),
       });
       if (!res.ok) {
@@ -74,7 +75,11 @@ export default function VerifyPage() {
           Sniffer
         </Link>
         <span className="text-[#d4cfc9]">/</span>
-        <span className="text-[13px] text-[#9ca3af]">Analyze an Image</span>
+        <Link href="/start" className="text-[13px] text-[#9ca3af] hover:text-[#0a0a0a] transition-colors">
+          Start Investigation
+        </Link>
+        <span className="text-[#d4cfc9]">/</span>
+        <span className="text-[13px] text-[#9ca3af]">Deepfake Analysis</span>
       </header>
 
       <main className="max-w-xl mx-auto px-6 py-14">

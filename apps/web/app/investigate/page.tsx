@@ -159,10 +159,10 @@ function InvestigateContent() {
             Takedown Notice
           </Link>
           <Link
-            href="/verify"
+            href="/start"
             className="text-[12px] font-medium bg-[#0a0a0a] text-white px-4 py-1.5 rounded-full hover:bg-[#1a1a1a] transition-colors"
           >
-            Verify Image
+            New Investigation
           </Link>
         </div>
       </header>
@@ -185,7 +185,7 @@ function InvestigateContent() {
           </h1>
           <p className="text-[13.5px] text-[#6b7280] leading-relaxed max-w-prose">
             {reportCaseId
-              ? "Your forensic evidence is attached. Find the removal contact for this platform and send your request — your Case ID and SHA-256 hash will be embedded as proof."
+              ? "Your case evidence is attached. Find the removal contact for this platform and send your request — your Case ID and SHA-256 hash will be embedded as proof."
               : "Paste a URL or domain where your content is being shared without consent. Sniffer will find the removal contact and generate a ready-to-send request."
             }
           </p>

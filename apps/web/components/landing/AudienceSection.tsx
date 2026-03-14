@@ -12,7 +12,7 @@ const AUDIENCES = [
     desc:
       "Someone used an intimate or manipulated image of you without consent. You need verifiable evidence — not a screenshot, not a claim. A cryptographically signed forensic report that platforms, law enforcement, and courts can act on.",
     cta: "Start anonymous case",
-    href: "/verify",
+    href: "/leak",
     accent: "text-rose-600",
     border: "border-rose-100",
     bg: "bg-rose-50",
@@ -47,7 +47,7 @@ const AUDIENCES = [
     desc:
       "Viral images move faster than editorial cycles. Verify source integrity before publication — ELA residuals, C2PA provenance, and perceptual hash consensus surfaced in one report your legal team can cite.",
     cta: "Try a verification",
-    href: "/verify",
+    href: "/start",
     accent: "text-amber-600",
     border: "border-amber-100",
     bg: "bg-amber-50",

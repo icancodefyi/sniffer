@@ -24,6 +24,7 @@ import { TamperHeatmap } from "@/components/report/TamperHeatmap";
 import { AuditTrail } from "@/components/report/AuditTrail";
 import { C2PAProvenance } from "@/components/report/C2PAProvenance";
 import { ContentTrace } from "@/components/report/ContentTrace";
+import { NCIIReportLayout } from "@/components/report/NCIIReportLayout";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -120,18 +121,24 @@ function ReportContent() {
     setSuspiciousImg(sessionStorage.getItem(`sniffer_suspicious_${caseId}`));
     setReferenceImg(sessionStorage.getItem(`sniffer_reference_${caseId}`));
 
-    Promise.all([
-      fetch(`${API_URL}/api/cases/${caseId}`).then((r) => {
+    // Fetch case first, then conditionally fetch analysis
+    fetch(`${API_URL}/api/cases/${caseId}`)
+      .then((r) => {
         if (!r.ok) throw new Error("Case not found");
         return r.json() as Promise<CaseData>;
-      }),
-      fetch(`${API_URL}/api/analysis/${caseId}/result`).then((r) => {
-        if (!r.ok) throw new Error("Analysis result not found");
-        return r.json() as Promise<AnalysisResult>;
-      }),
-    ])
-      .then(([c, a]) => {
+      })
+      .then(async (c) => {
         setCaseData(c);
+        // NCII pipeline: no forensic analysis — discovery is the primary output
+        if (c.pipeline_type === "ncii") {
+          setLoading(false);
+          return;
+        }
+        // Deepfake pipeline: fetch forensic analysis result
+        const a = await fetch(`${API_URL}/api/analysis/${caseId}/result`).then((r) => {
+          if (!r.ok) throw new Error("Analysis result not found");
+          return r.json() as Promise<AnalysisResult>;
+        });
         setAnalysis(a);
       })
       .catch((e: unknown) => setFetchError(e instanceof Error ? e.message : "Failed to load report"))
@@ -157,11 +164,44 @@ function ReportContent() {
     );
   }
 
-  if (fetchError || !analysis || !caseData) {
+  if (fetchError || !caseData) {
     return (
       <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
         <div className="text-center max-w-sm px-6">
           <p className="text-[14px] text-red-600 mb-4">{fetchError ?? "Report not found"}</p>
+          <Link href="/start" className="text-[13px] text-indigo-600 hover:underline">
+            ← Start a new investigation
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ── NCII Pipeline 2 layout ─────────────────────────────────────────────────
+  if (caseData.pipeline_type === "ncii") {
+    return (
+      <NCIIReportLayout
+        caseId={caseId}
+        caseData={caseData}
+        suspiciousImg={suspiciousImg}
+        isCaseSaved={isCaseSaved}
+        isSaving={isSaving}
+        saveSent={saveSent}
+        saveEmail={saveEmail}
+        onSaveEmailChange={setSaveEmail}
+        onSendMagicLink={handleSendMagicLink}
+        onSaveCase={handleSaveCase}
+        sessionUserId={(session?.user as { id?: string } | undefined)?.id}
+      />
+    );
+  }
+
+  // ── Deepfake Pipeline 1: requires analysis result ──────────────────────────
+  if (!analysis) {
+    return (
+      <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
+        <div className="text-center max-w-sm px-6">
+          <p className="text-[14px] text-red-600 mb-4">Analysis result not found</p>
           <Link href="/verify" className="text-[13px] text-indigo-600 hover:underline">
             ← Start a new verification
           </Link>
@@ -190,7 +230,7 @@ function ReportContent() {
           Sniffer
         </Link>
         <span className="text-[#d4cfc9]">/</span>
-        <span className="text-[13px] text-[#9ca3af]">Forensic Report</span>
+        <span className="text-[13px] text-[#9ca3af]">Deepfake Forensic Report</span>
         <div className="ml-auto hidden sm:flex items-center gap-2">
           <button
             onClick={copyHash}
@@ -414,8 +454,8 @@ function ReportContent() {
             </p>
           </div>
           <div className="flex gap-4 print:hidden">
-            <Link href="/verify" className="text-[12px] text-indigo-600 hover:underline">
-              New Verification
+            <Link href="/start" className="text-[12px] text-indigo-600 hover:underline">
+              New Investigation
             </Link>
             <button
               onClick={() => window.print()}

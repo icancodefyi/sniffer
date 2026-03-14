@@ -64,7 +64,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-2.5">
           <LanguageSwitcher />
           <Link
-            href="/verify"
+            href="/start"
             className="px-5 py-2 rounded-full text-[13px] font-medium text-white transition-opacity hover:opacity-80"
             style={{ background: "#0a0a0a" }}
           >
@@ -75,7 +75,7 @@ export function Navbar() {
         {/* Mobile: verify CTA + hamburger */}
         <div className="flex md:hidden items-center gap-3">
           <Link
-            href="/verify"
+            href="/start"
             className="px-4 py-1.5 rounded-full text-[12px] font-medium text-white"
             style={{ background: "#0a0a0a" }}
           >
@@ -129,7 +129,7 @@ export function Navbar() {
           ))}
           <div className="mt-5 flex flex-col gap-3">
             <Link
-              href="/verify"
+              href="/start"
               onClick={() => setMenuOpen(false)}
               className="w-full text-center py-3 rounded-full text-[13px] font-medium text-white"
               style={{ background: "#0a0a0a" }}

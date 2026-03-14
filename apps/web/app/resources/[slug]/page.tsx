@@ -59,11 +59,11 @@ export default async function BlogPostPage({ params }: PageProps) {
               <span>←</span>
               <span>Resources</span>
             </Link>
-          </div>
+              href="/start"
 
         {/* Article header */}
         <header className="mb-10">
-          {/* Tags */}
+              Start Investigation
           <div className="flex flex-wrap gap-2 mb-5">
             {post.tags?.map((tag) => (
               <span
@@ -162,11 +162,11 @@ export default async function BlogPostPage({ params }: PageProps) {
               DCT analysis, and more — in under 30 seconds.
             </p>
             <Link
-              href="/verify"
+              href="/start"
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-[13px] font-medium text-[#0a0a0a] transition-opacity hover:opacity-80"
               style={{ background: "#f5f2ee" }}
             >
-              Start Verification
+              Start Investigation
               <span>→</span>
             </Link>
           </div>

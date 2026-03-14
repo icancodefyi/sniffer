@@ -97,8 +97,8 @@ export default function TakedownPage() {
           <Link href="/protect" className="text-[12px] text-[#6b7280] hover:text-[#0a0a0a] border border-[#e8e4de] px-3 py-1.5 rounded-lg transition-colors">
             Protect Images
           </Link>
-          <Link href="/verify" className="text-[12px] font-medium bg-[#0a0a0a] text-white px-4 py-1.5 rounded-full hover:bg-[#1a1a1a] transition-colors">
-            Verify an Image
+          <Link href="/start" className="text-[12px] font-medium bg-[#0a0a0a] text-white px-4 py-1.5 rounded-full hover:bg-[#1a1a1a] transition-colors">
+            New Investigation
           </Link>
         </div>
       </header>
@@ -318,10 +318,10 @@ export default function TakedownPage() {
                 <p className="text-[11px] text-[#9ca3af] mt-0.5">Generate a detailed evidence report to attach to your takedown filing</p>
               </div>
               <Link
-                href="/verify"
+                href="/start"
                 className="shrink-0 ml-4 inline-flex items-center gap-1.5 text-[12px] font-medium bg-[#0a0a0a] text-white px-4 py-2 rounded-full hover:bg-[#1a1a1a] transition-colors"
               >
-                Verify Image
+                Start Investigation
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>

@@ -65,7 +65,7 @@ export function HeroSection() {
           {/* CTAs */}
           <div className="mb-4 flex flex-wrap gap-3">
             <Link
-              href="/verify"
+              href="/start"
               className="inline-flex items-center gap-2 rounded-full bg-[#0a0a0a] px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-75"
             >
               {t.hero.ctaPrimary}

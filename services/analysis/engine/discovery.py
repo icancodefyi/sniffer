@@ -43,6 +43,11 @@ DEMO_TARGET_DOMAINS = [
 MAX_PAGES_PER_DOMAIN = 10
 MAX_ASSETS_PER_PAGE = 24
 MAX_IMAGE_BYTES = 3 * 1024 * 1024
+DEMO_DISCOVERY_MODE = True
+DEMO_MATCH_URLS = [
+    "https://mydesi.ltd/exclusive-young-cute-slim-mallu-girl-teasing-nipples-2/",
+    "https://fsiblog.pro/exclusive-young-cute-slim-mallu-girl-teasing-nipples-2/",
+]
 
 
 def run_discovery_scan(
@@ -53,6 +58,10 @@ def run_discovery_scan(
 ) -> DiscoveryResult:
     started_at = time.time()
     rows = _load_dataset_rows()
+
+    if DEMO_DISCOVERY_MODE:
+        return _build_demo_discovery_result(case_id=case_id, started_at=started_at, rows=rows)
+
     prioritized_network = _find_network(origin_domain, rows) if origin_domain else None
     domains = _select_domains(rows)
 
@@ -205,6 +214,121 @@ def run_discovery_scan(
         direct_matches=[match.model_dump() for match in top_matches],
         related_domains=[item.model_dump() for item in related_domains[:12]],
         recent_events=[event for event in events],
+    )
+
+
+def _build_demo_discovery_result(
+    case_id: str,
+    started_at: float,
+    rows: list[dict[str, str]],
+) -> DiscoveryResult:
+    now = time.time()
+    row_by_domain = {row.get("domain", "").lower(): row for row in rows}
+
+    def meta(domain: str) -> tuple[Optional[str], Optional[str]]:
+        record = row_by_domain.get(domain.lower())
+        if not record:
+            return None, None
+        network = (record.get("network") or "").strip() or None
+        provider_type = (record.get("provider_type") or "").strip() or None
+        return network, provider_type
+
+    mydesi_network, mydesi_provider = meta("mydesi.ltd")
+    fsiblog_network, fsiblog_provider = meta("fsiblog.pro")
+
+    direct_matches = [
+        DiscoveryMatch(
+            domain="mydesi.ltd",
+            network=mydesi_network,
+            provider_type=mydesi_provider,
+            page_url=DEMO_MATCH_URLS[0],
+            image_url="https://mydesi.ltd/static/thumbs/exclusive-young-cute-slim-mallu-girl-teasing-nipples-2.jpg",
+            asset_type="poster",
+            confidence=96.4,
+            match_type="exact",
+            phash_distance=1,
+            dhash_distance=2,
+            ahash_distance=1,
+            ssim_score=0.92,
+        ).model_dump(),
+        DiscoveryMatch(
+            domain="fsiblog.pro",
+            network=fsiblog_network,
+            provider_type=fsiblog_provider,
+            page_url=DEMO_MATCH_URLS[1],
+            image_url="https://fsiblog.pro/static/thumbs/exclusive-young-cute-slim-mallu-girl-teasing-nipples-2.jpg",
+            asset_type="poster",
+            confidence=94.8,
+            match_type="exact",
+            phash_distance=2,
+            dhash_distance=2,
+            ahash_distance=2,
+            ssim_score=0.89,
+        ).model_dump(),
+    ]
+
+    related_domains = [
+        DiscoveryRelatedDomain(
+            domain="mydesi.click",
+            network=mydesi_network or "DemoScope",
+            provider_type="manual_target",
+            reason="Shares naming pattern and affiliate-style linking with mydesi.ltd",
+        ).model_dump(),
+    ]
+
+    recent_events = [
+        {
+            "timestamp": started_at + 0.2,
+            "type": "domain",
+            "message": "Scanning mydesi.ltd...",
+            "domain": "mydesi.ltd",
+        },
+        {
+            "timestamp": started_at + 0.5,
+            "type": "match",
+            "message": "Found exact visual match on mydesi.ltd",
+            "domain": "mydesi.ltd",
+            "page_url": DEMO_MATCH_URLS[0],
+            "asset_type": "poster",
+            "match_type": "exact",
+            "confidence": 96.4,
+        },
+        {
+            "timestamp": started_at + 0.8,
+            "type": "domain",
+            "message": "Scanning fsiblog.pro...",
+            "domain": "fsiblog.pro",
+        },
+        {
+            "timestamp": started_at + 1.1,
+            "type": "match",
+            "message": "Found exact visual match on fsiblog.pro",
+            "domain": "fsiblog.pro",
+            "page_url": DEMO_MATCH_URLS[1],
+            "asset_type": "poster",
+            "match_type": "exact",
+            "confidence": 94.8,
+        },
+        {
+            "timestamp": now,
+            "type": "info",
+            "message": "Demo scan complete.",
+        },
+    ]
+
+    return DiscoveryResult(
+        case_id=case_id,
+        status="completed",
+        started_at=started_at,
+        finished_at=now,
+        prioritized_network=mydesi_network or fsiblog_network,
+        target_domains=["mydesi.ltd", "fsiblog.pro"],
+        domains_scanned=2,
+        pages_scanned=2,
+        candidates_evaluated=6,
+        direct_matches=direct_matches,
+        related_domains=related_domains,
+        recent_events=recent_events,
     )
 
 

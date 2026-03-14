@@ -24,10 +24,10 @@ export function CTASection() {
 
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link
-            href="/verify"
+            href="/start"
             className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-[14px] font-semibold text-[#0a0a0a] transition-opacity hover:opacity-85"
           >
-            Create a Verification Case
+            Start an Investigation
             <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>

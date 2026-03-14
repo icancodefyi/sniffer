@@ -257,10 +257,10 @@ export default function HowItWorksPage() {
                 ))}
               </div>
               <Link
-                href="/verify"
+                href="/start"
                 className="w-full text-center py-3 rounded-full bg-[#0a0a0a] text-white text-[13px] font-medium hover:bg-[#1a1a1a] transition-colors"
               >
-                Start a Verification →
+                Start Investigation →
               </Link>
             </div>
           </div>
@@ -618,10 +618,10 @@ export default function HowItWorksPage() {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link
-              href="/verify"
+              href="/start"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-[#0a0a0a] text-[14px] font-semibold hover:opacity-85 transition-opacity"
             >
-              Create a Verification Case
+              Start an Investigation
               <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>

@@ -111,10 +111,10 @@ export default function NotFound() {
             ← Return to Home
           </Link>
           <Link
-            href="/verify"
+            href="/start"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-[#e8e4de] bg-white text-[13px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors"
           >
-            Start a Verification
+            Start Investigation
           </Link>
           <Link
             href="/dashboard"

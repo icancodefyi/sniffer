@@ -79,10 +79,10 @@ export default function DashboardPage() {
             </p>
           </div>
           <Link
-            href="/verify"
+            href="/start"
             className="shrink-0 text-[12.5px] font-medium bg-[#0a0a0a] text-white px-4 py-2 rounded-full hover:bg-[#1a1a1a] transition-colors"
           >
-            New Verification
+            New Investigation
           </Link>
         </div>
 
@@ -105,13 +105,13 @@ export default function DashboardPage() {
             </div>
             <p className="text-[13px] font-medium text-[#374151] mb-1.5">No saved cases yet</p>
             <p className="text-[12px] text-[#9ca3af] max-w-xs mx-auto mb-5">
-              Run a verification and click &quot;Save report&quot; to track your cases here.
+              Start an investigation and click &quot;Save report&quot; to track your cases here.
             </p>
             <Link
-              href="/verify"
+              href="/start"
               className="inline-flex text-[12.5px] font-medium bg-[#0a0a0a] text-white px-5 py-2 rounded-full hover:bg-[#1a1a1a] transition-colors"
             >
-              Verify an image
+              Start an investigation
             </Link>
           </div>
         ) : (
@@ -129,8 +129,8 @@ export default function DashboardPage() {
         {/* Footer */}
         <div className="border-t border-[#e8e4de] mt-12 pt-6 flex items-center justify-between">
           <p className="font-mono text-[10px] text-[#c4bdb5]">SNIFFER · IMPIC LABS · 2026</p>
-          <Link href="/verify" className="text-[12px] text-indigo-600 hover:underline">
-            New verification →
+          <Link href="/start" className="text-[12px] text-indigo-600 hover:underline">
+            New investigation →
           </Link>
         </div>
 

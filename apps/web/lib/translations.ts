@@ -1,6 +1,7 @@
 export interface Translations {
   nav: {
     howItWorks: string;
+    supportedPlatforms: string;
     features: string;
     protect: string;
     takedown: string;
@@ -72,6 +73,7 @@ export const translations: Record<string, Translations> = {
   en: {
     nav: {
       howItWorks: "HOW IT WORKS",
+      supportedPlatforms: "SUPPORTED PLATFORMS",
       features: "FEATURES",
       protect: "PROTECT",
       takedown: "TAKEDOWN",
@@ -142,6 +144,7 @@ export const translations: Record<string, Translations> = {
   hi: {
     nav: {
       howItWorks: "यह कैसे काम करता है",
+      supportedPlatforms: "समर्थित प्लेटफ़ॉर्म",
       features: "विशेषताएं",
       protect: "सुरक्षित करें",
       takedown: "हटाएं",
@@ -212,6 +215,7 @@ export const translations: Record<string, Translations> = {
   bn: {
     nav: {
       howItWorks: "এটি কীভাবে কাজ করে",
+      supportedPlatforms: "সমর্থিত প্ল্যাটফর্ম",
       features: "বৈশিষ্ট্যসমূহ",
       protect: "সুরক্ষিত করুন",
       takedown: "সরিয়ে নিন",
@@ -282,6 +286,7 @@ export const translations: Record<string, Translations> = {
   ta: {
     nav: {
       howItWorks: "இது எவ்வாறு செயல்படுகிறது",
+      supportedPlatforms: "ஆதரிக்கப்படும் தளங்கள்",
       features: "அம்சங்கள்",
       protect: "பாதுகாக்கவும்",
       takedown: "அகற்றவும்",
@@ -352,6 +357,7 @@ export const translations: Record<string, Translations> = {
   te: {
     nav: {
       howItWorks: "ఇది ఎలా పని చేస్తుంది",
+      supportedPlatforms: "మద్దతు ఉన్న వేదికలు",
       features: "లక్షణాలు",
       protect: "రక్షించండి",
       takedown: "తొలగించండి",
@@ -422,6 +428,7 @@ export const translations: Record<string, Translations> = {
   mr: {
     nav: {
       howItWorks: "हे कसे कार्य करते",
+      supportedPlatforms: "समर्थित प्लॅटफॉर्म",
       features: "वैशिष्ट्ये",
       protect: "संरक्षित करा",
       takedown: "काढून टाका",
@@ -492,6 +499,7 @@ export const translations: Record<string, Translations> = {
   kn: {
     nav: {
       howItWorks: "ಇದು ಹೇಗೆ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ",
+      supportedPlatforms: "ಬೆಂಬಲಿತ ವೇದಿಕೆಗಳು",
       features: "ವೈಶಿಷ್ಟ್ಯಗಳು",
       protect: "ರಕ್ಷಿಸಿ",
       takedown: "ತೆಗೆದುಹಾಕಿ",
@@ -562,6 +570,7 @@ export const translations: Record<string, Translations> = {
   gu: {
     nav: {
       howItWorks: "આ કેવી રીતે કામ કરે છે",
+      supportedPlatforms: "સમર્થિત પ્લેટફોર્મ્સ",
       features: "વૈશિષ્ટ્યો",
       protect: "સુરક્ષિત કરો",
       takedown: "દૂર કરો",

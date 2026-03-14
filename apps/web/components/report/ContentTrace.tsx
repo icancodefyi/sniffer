@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { DiscoveryResult } from "@/components/report/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -170,6 +171,18 @@ export function ContentTrace({ caseId }: Props) {
                       <a href={match.image_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-3.5 py-2 text-[12px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors">
                         Open matched image
                       </a>
+                      <Link
+                        href={`/investigate?caseId=${encodeURIComponent(caseId)}&domain=${encodeURIComponent(match.domain)}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3.5 py-2 text-[12px] font-medium text-indigo-700 hover:border-indigo-300 transition-colors"
+                      >
+                        Step 2: Investigate Domain
+                      </Link>
+                      <Link
+                        href={`/takedown?caseId=${encodeURIComponent(caseId)}&domain=${encodeURIComponent(match.domain)}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-3.5 py-2 text-[12px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors"
+                      >
+                        Step 3: Prepare Takedown
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -189,6 +202,20 @@ export function ContentTrace({ caseId }: Props) {
                     <p className="text-[13px] font-semibold text-[#0a0a0a] mb-1">{domain.domain}</p>
                     <p className="text-[11.5px] text-indigo-600 font-mono mb-2">{domain.network}</p>
                     <p className="text-[11.5px] text-[#6b7280] leading-relaxed">{domain.reason}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/investigate?caseId=${encodeURIComponent(caseId)}&domain=${encodeURIComponent(domain.domain)}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-[11.5px] font-medium text-indigo-700 hover:border-indigo-300 transition-colors"
+                      >
+                        Investigate
+                      </Link>
+                      <Link
+                        href={`/takedown?caseId=${encodeURIComponent(caseId)}&domain=${encodeURIComponent(domain.domain)}`}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#e8e4de] bg-white px-3 py-1.5 text-[11.5px] font-medium text-[#374151] hover:border-[#0a0a0a] transition-colors"
+                      >
+                        Takedown
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -53,12 +53,8 @@ function InvestigateContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<Results | null>(null);
-  const [contentUrl, setContentUrl] = useState("");
-  const [draftCopied, setDraftCopied] = useState(false);
-  const [scriptCopied, setScriptCopied] = useState(false);
   // Evidence from linked Sniffer report
   const [caseRefAttached, setCaseRefAttached] = useState<string | null>(null);
-  const [fileHashAttached, setFileHashAttached] = useState<string | null>(null);
   const [reportCaseId, setReportCaseId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchParams = useSearchParams();
@@ -108,16 +104,14 @@ function InvestigateContent() {
     analyze(input);
   }
 
-  // Read query params from linked report (caseId, hash, domain)
+  // Read query params from linked report (caseId, domain)
   useEffect(() => {
     const domainParam = searchParams.get("domain");
     const caseIdParam = searchParams.get("caseId");
-    const hashParam = searchParams.get("hash");
     if (caseIdParam) {
       setCaseRefAttached(formatCaseRef(caseIdParam));
       setReportCaseId(caseIdParam);
     }
-    if (hashParam) setFileHashAttached(hashParam);
     if (domainParam) {
       const clean = extractDomain(domainParam);
       if (clean) {
@@ -146,10 +140,10 @@ function InvestigateContent() {
               Report
             </Link>
             <span className="text-[#d4cfc9]">/</span>
-            <span className="text-[13px] text-[#9ca3af]">Request Removal</span>
+            <span className="text-[13px] text-[#9ca3af]">Investigate</span>
           </>
         ) : (
-          <span className="text-[13px] text-[#9ca3af]">Remove Content</span>
+          <span className="text-[13px] text-[#9ca3af]">Investigate</span>
         )}
         <div className="ml-auto flex items-center gap-2">
           <Link
@@ -178,15 +172,15 @@ function InvestigateContent() {
                 <path d="M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-widest">Content Removal</p>
+            <p className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-widest">Step 2 · Investigate</p>
           </div>
           <h1 className="text-[26px] font-bold text-[#0a0a0a] tracking-tight mb-3">
-            {reportCaseId ? "Request Removal" : "Remove Content"}
+            Investigate Target Domain
           </h1>
           <p className="text-[13.5px] text-[#6b7280] leading-relaxed max-w-prose">
             {reportCaseId
-              ? "Your case evidence is attached. Find the removal contact for this platform and send your request — your Case ID and SHA-256 hash will be embedded as proof."
-              : "Paste a URL or domain where your content is being shared without consent. Sniffer will find the removal contact and generate a ready-to-send request."
+              ? "Your case evidence is attached. Use this step to identify the right platform contact and validate where to submit your request."
+              : "Paste a URL or domain where your content is being shared without consent. Sniffer will map the likely platform and available contact routes."
             }
           </p>
           {/* Evidence badge when coming from a report */}
@@ -255,6 +249,28 @@ function InvestigateContent() {
         {/* Results */}
         {results && !loading && (
           <div className="space-y-6">
+
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[12.5px] text-indigo-900">
+                  Step 2 reviewed for <span className="font-semibold">{results.domain}</span>. Continue to Step 3 for final takedown action.
+                </p>
+                {results.takedownError && (
+                  <p className="text-[11.5px] text-indigo-700 mt-1">
+                    Takedown provider is currently unavailable from this step. Step 3 will open manual domain-specific notice mode.
+                  </p>
+                )}
+              </div>
+              <Link
+                href={reportCaseId
+                  ? `/takedown?caseId=${encodeURIComponent(reportCaseId)}&domain=${encodeURIComponent(results.domain)}`
+                  : `/takedown?domain=${encodeURIComponent(results.domain)}`
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-700 px-3.5 py-2 text-[12px] font-medium text-white hover:bg-indigo-800 transition-colors"
+              >
+                Continue to Step 3
+              </Link>
+            </div>
 
             {/* Domain badge */}
             <div className="flex items-center gap-2">
@@ -342,11 +358,9 @@ function InvestigateContent() {
                 <ServiceError message={results.takedownError} />
               ) : results.takedown?.found ? (
                 <div className="border border-[#e8e4de] rounded-xl bg-white overflow-hidden">
-
-                  {/* Card header */}
                   <div className="px-5 pt-4 pb-4 border-b border-[#f0ede8] flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[13px] font-semibold text-[#0a0a0a]">Steps to remove this content</p>
+                      <p className="text-[13px] font-semibold text-[#0a0a0a]">Resolved takedown route</p>
                       <p className="text-[11px] text-[#9ca3af]">
                         {results.takedown.source === "scraped" ? "Retrieved via live scan" : "From Sniffer dataset"}
                       </p>
@@ -354,305 +368,37 @@ function InvestigateContent() {
                     <StatusBadge status={results.takedown.status} />
                   </div>
 
-                  {/* Live scan warning */}
-                  {results.takedown.source === "scraped" && (
-                    <div className="mx-5 mt-4 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3">
-                      <svg width="13" height="13" fill="none" stroke="#d97706" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 mt-0.5">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
-                        <line x1="12" y1="9" x2="12" y2="13" strokeLinecap="round" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" />
-                      </svg>
-                      <p className="text-[11.5px] text-amber-800 leading-relaxed">
-                        <span className="font-semibold">Live scan result —</span> this removal page was found by
-                        scanning the site in real time, not from our verified dataset. Verify the link is correct
-                        before submitting.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="px-5 py-5 space-y-6">
-
-                    {/* Step 1 — Evidence */}
-                    <div>
-                      <div className="flex items-center gap-2.5 mb-3">
-                        <span className="w-5 h-5 rounded-full border border-[#e8e4de] bg-[#fafaf8] flex items-center justify-center font-mono text-[9px] text-[#9ca3af] shrink-0">1</span>
-                        <p className="text-[12.5px] font-semibold text-[#0a0a0a]">Gather your evidence first</p>
+                  <div className="px-5 py-5 space-y-4">
+                    <p className="text-[12.5px] text-[#6b7280] leading-relaxed">
+                      Investigation step complete. Review route metadata here, then continue to Step 3 for final notice generation and submission actions.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Removal Method</p>
+                        <p className="text-[12.5px] text-[#0a0a0a] font-medium">{results.takedown.removal_type?.replace(/_/g, " ") ?? "Unknown"}</p>
                       </div>
-                      {caseRefAttached ? (
-                        <p className="pl-8 text-[11.5px] text-emerald-700">
-                          Your Sniffer report <span className="font-mono">{caseRefAttached}</span> already provides verified image evidence — steps 1, 3 and 4 below are covered.
-                        </p>
-                      ) : null}
-                      <ul className="pl-8 mt-2 space-y-2">
-                        {[
-                          { text: "Screenshot the page with the content clearly visible",    done: !!caseRefAttached },
-                          { text: "Copy the direct URL of the specific content",              done: false },
-                          { text: "Note the date you first found it",                         done: !!caseRefAttached },
-                          { text: "Save your Sniffer report — it\'s valid supporting evidence", done: !!caseRefAttached },
-                        ].map((item, i) => (
-                          <li key={i} className="flex items-start gap-2.5">
-                            {item.done ? (
-                              <svg width="12" height="12" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24" className="shrink-0 mt-0.5">
-                                <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            ) : (
-                              <span className="w-1 h-1 rounded-full bg-[#c4bdb5] shrink-0 mt-1.75" />
-                            )}
-                            <span className={`text-[12px] leading-relaxed ${item.done ? "text-[#9ca3af] line-through decoration-[#c4bdb5]" : "text-[#6b7280]"}`}>{item.text}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Step 2 — Send request */}
-                    <div>
-                      <div className="flex items-center gap-2.5 mb-3">
-                        <span className="w-5 h-5 rounded-full border border-[#e8e4de] bg-[#fafaf8] flex items-center justify-center font-mono text-[9px] text-[#9ca3af] shrink-0">2</span>
-                        <p className="text-[12.5px] font-semibold text-[#0a0a0a]">Send your removal request</p>
-                      </div>
-                      <div className="pl-8 space-y-3">
-
-                        {/* Evidence attached pill */}
-                        {caseRefAttached && (
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-200 bg-emerald-50">
-                            <svg width="11" height="11" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
-                              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" strokeLinecap="round" strokeLinejoin="round" />
-                              <polyline points="22 4 12 14.01 9 11.01" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                            <span className="text-[11px] text-emerald-800 font-medium">Forensic evidence attached</span>
-                            <span className="font-mono text-[10px] text-emerald-600 ml-0.5">· {caseRefAttached}</span>
-                          </div>
-                        )}
-
-                        {/* Optional content URL personalizer */}
-                        <input
-                          type="text"
-                          value={contentUrl}
-                          onChange={(e) => setContentUrl(e.target.value)}
-                          placeholder="Paste the content URL to personalise your draft (optional)"
-                          className="w-full rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-3.5 py-2.5 text-[12px] text-[#374151] placeholder:text-[#c4bdb5] focus:outline-none focus:border-[#a8a29e] transition-colors"
-                        />
-
-                        {results.takedown.contact_email ? (
-                          /* Email draft */
-                          <div className="rounded-xl border border-[#e8e4de] overflow-hidden">
-                            <div className="px-4 py-2.5 bg-[#fafaf8] border-b border-[#f0ede8] flex items-center gap-2">
-                              <svg width="11" height="11" fill="none" stroke="#a8a29e" strokeWidth="1.8" viewBox="0 0 24 24">
-                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                                <polyline points="22,6 12,13 2,6" />
-                              </svg>
-                              <span className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-widest">Ready-to-send draft</span>
-                              <span className="ml-auto font-mono text-[10.5px] text-[#374151]">→ {results.takedown.contact_email}</span>
-                            </div>
-                            <div className="px-4 pt-3 pb-1 border-b border-[#f0ede8]">
-                              <p className="font-mono text-[9.5px] text-[#a8a29e] uppercase tracking-widest mb-0.5">Subject</p>
-                              <p className="text-[12.5px] text-[#374151] font-medium pb-2.5">
-                                Urgent Content Removal Request – {results.domain}
-                              </p>
-                            </div>
-                            <pre className="px-4 py-3.5 text-[11.5px] text-[#374151] leading-[1.8] whitespace-pre-wrap font-sans select-text overflow-x-auto max-h-52 overflow-y-auto bg-white">
-                              {buildEmailDraft(results.domain, contentUrl, caseRefAttached, fileHashAttached)}
-                            </pre>
-                            <div className="px-4 py-3 bg-[#fafaf8] border-t border-[#f0ede8] flex items-center gap-2.5">
-                              <button
-                                onClick={() => {
-                                  const text = `Subject: Urgent Content Removal Request – ${results!.domain}\n\n${buildEmailDraft(results!.domain, contentUrl, caseRefAttached, fileHashAttached)}`;
-                                  navigator.clipboard.writeText(text).then(() => {
-                                    setDraftCopied(true);
-                                    setTimeout(() => setDraftCopied(false), 2500);
-                                  });
-                                }}
-                                className="flex items-center gap-1.5 text-[12px] font-medium border border-[#e8e4de] bg-white px-3.5 py-2 rounded-lg hover:border-[#0a0a0a] transition-colors"
-                              >
-                                {draftCopied ? (
-                                  <>
-                                    <svg width="12" height="12" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
-                                      <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                    Copied!
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                      <rect x="9" y="9" width="13" height="13" rx="2" />
-                                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeLinecap="round" />
-                                    </svg>
-                                    Copy Email
-                                  </>
-                                )}
-                              </button>
-                              <a
-                                href={`mailto:${results.takedown.contact_email}?subject=${encodeURIComponent(`Urgent Content Removal Request – ${results.domain}`)}&body=${encodeURIComponent(buildEmailDraft(results.domain, contentUrl, caseRefAttached, fileHashAttached))}`}
-                                className="flex items-center gap-1.5 text-[12px] font-medium bg-[#0a0a0a] text-white px-3.5 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
-                              >
-                                Open in Email Client
-                                <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </a>
-                            </div>
-                          </div>
-                        ) : results.takedown.removal_page ? (
-                          /* Form script */
-                          <div className="rounded-xl border border-[#e8e4de] overflow-hidden">
-                            {/* Destination URL row */}
-                            <div className="px-4 py-2.5 bg-[#fafaf8] border-b border-[#f0ede8] flex items-center gap-2 min-w-0">
-                              <svg width="11" height="11" fill="none" stroke="#a8a29e" strokeWidth="1.8" viewBox="0 0 24 24" className="shrink-0">
-                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                              </svg>
-                              <span className="font-mono text-[10px] text-[#a8a29e] uppercase tracking-widest shrink-0">Removal form</span>
-                              <a
-                                href={results.takedown.removal_page}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="ml-2 font-mono text-[10.5px] text-indigo-600 hover:underline truncate min-w-0"
-                              >
-                                {results.takedown.removal_page}
-                              </a>
-                            </div>
-                            <p className="px-4 pt-3 pb-0 font-mono text-[9.5px] text-[#a8a29e] uppercase tracking-widest">Copy and paste into the form</p>
-                            <p className="px-4 py-3.5 text-[12.5px] text-[#374151] leading-[1.75] select-text bg-white">
-                              {buildFormScript(results.domain, contentUrl)}
-                            </p>
-                            <div className="px-4 py-3 bg-[#fafaf8] border-t border-[#f0ede8] flex items-center gap-2.5">
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(buildFormScript(results!.domain, contentUrl)).then(() => {
-                                    setScriptCopied(true);
-                                    setTimeout(() => setScriptCopied(false), 2500);
-                                  });
-                                }}
-                                className="flex items-center gap-1.5 text-[12px] font-medium border border-[#e8e4de] bg-white px-3.5 py-2 rounded-lg hover:border-[#0a0a0a] transition-colors"
-                              >
-                                {scriptCopied ? (
-                                  <>
-                                    <svg width="12" height="12" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
-                                      <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                    Copied!
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                      <rect x="9" y="9" width="13" height="13" rx="2" />
-                                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeLinecap="round" />
-                                    </svg>
-                                    Copy Text
-                                  </>
-                                )}
-                              </button>
-                              <a
-                                href={results.takedown.removal_page}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-[12px] font-medium bg-[#0a0a0a] text-white px-3.5 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
-                              >
-                                Open Removal Form
-                                <svg width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </a>
-                            </div>
-                          </div>
-                        ) : (
-                          /* Found but missing contact details — manual fallback */
-                          <div className="rounded-xl border border-[#e8e4de] bg-[#fafaf8] px-4 py-4 space-y-3">
-                            <div className="flex items-start gap-2.5">
-                              <svg width="13" height="13" fill="none" stroke="#d97706" strokeWidth="2" viewBox="0 0 24 24" className="shrink-0 mt-0.5">
-                                <circle cx="12" cy="12" r="10" />
-                                <line x1="12" y1="8" x2="12" y2="12" strokeLinecap="round" />
-                                <line x1="12" y1="16" x2="12.01" y2="16" strokeLinecap="round" />
-                              </svg>
-                              <p className="text-[12px] text-[#374151] leading-relaxed">
-                                This site accepts email removal requests but we don&apos;t have the address on file yet.
-                                Copy the draft below and send it once you find their DMCA or Contact page.
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <a
-                                href={`https://${results.domain}/dmca`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-[12px] text-[#374151] border border-[#e8e4de] bg-white px-3 py-1.5 rounded-lg hover:border-[#0a0a0a] transition-colors"
-                              >
-                                Try /{results.domain}/dmca
-                                <svg width="9" height="9" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </a>
-                              <a
-                                href={`https://${results.domain}/contact`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-[12px] text-[#374151] border border-[#e8e4de] bg-white px-3 py-1.5 rounded-lg hover:border-[#0a0a0a] transition-colors"
-                              >
-                                Try /{results.domain}/contact
-                                <svg width="9" height="9" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                  <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" strokeLinecap="round" strokeLinejoin="round" />
-                                  <path d="M15 3h6v6M10 14L21 3" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </a>
-                            </div>
-                            <pre className="text-[11.5px] text-[#374151] leading-[1.8] whitespace-pre-wrap font-sans select-text overflow-x-auto bg-white border border-[#e8e4de] rounded-lg px-4 py-3 max-h-40 overflow-y-auto">
-                              {buildEmailDraft(results.domain, contentUrl, caseRefAttached, fileHashAttached)}
-                            </pre>
-                            <button
-                              onClick={() => {
-                                const text = `Subject: Urgent Content Removal Request – ${results!.domain}\n\n${buildEmailDraft(results!.domain, contentUrl, caseRefAttached, fileHashAttached)}`;
-                                navigator.clipboard.writeText(text).then(() => {
-                                  setDraftCopied(true);
-                                  setTimeout(() => setDraftCopied(false), 2500);
-                                });
-                              }}
-                              className="flex items-center gap-1.5 text-[12px] font-medium border border-[#e8e4de] bg-white px-3.5 py-2 rounded-lg hover:border-[#0a0a0a] transition-colors"
-                            >
-                              {draftCopied ? (
-                                <>
-                                  <svg width="12" height="12" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
-                                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                  Copied!
-                                </>
-                              ) : (
-                                <>
-                                  <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeLinecap="round" />
-                                  </svg>
-                                  Copy Draft Email
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        )}
+                      <div>
+                        <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-widest mb-1">Contact Email</p>
+                        <p className="text-[12.5px] text-[#0a0a0a] font-medium break-all">{results.takedown.contact_email ?? "Not listed"}</p>
                       </div>
                     </div>
-
-                    {/* Step 3 — Escalation */}
-                    <div>
-                      <div className="flex items-center gap-2.5 mb-3">
-                        <span className="w-5 h-5 rounded-full border border-[#e8e4de] bg-[#fafaf8] flex items-center justify-center font-mono text-[9px] text-[#9ca3af] shrink-0">3</span>
-                        <p className="text-[12.5px] font-semibold text-[#0a0a0a]">No response within 48 hours?</p>
-                      </div>
-                      <ul className="pl-8 space-y-2">
-                        {[
-                          "Escalate to their domain registrar — find it on whois.domaintools.com",
-                          "File a formal complaint at DMCA.com for third-party enforcement",
-                          "Report to the hosting provider's abuse team directly",
-                          "In India: file at cybercrime.gov.in under the IT Act",
-                        ].map((item, i) => (
-                          <li key={i} className="flex items-start gap-2.5">
-                            <span className="w-1 h-1 rounded-full bg-[#c4bdb5] shrink-0 mt-1.75" />
-                            <span className="text-[12px] text-[#6b7280] leading-relaxed">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="flex flex-wrap gap-2">
+                      {results.takedown.removal_page && (
+                        <a
+                          href={results.takedown.removal_page}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[12px] font-medium border border-[#e8e4de] bg-white px-3.5 py-2 rounded-lg hover:border-[#0a0a0a] transition-colors"
+                        >
+                          Verify Removal Form
+                        </a>
+                      )}
+                      {caseRefAttached && (
+                        <span className="inline-flex items-center gap-1.5 text-[11.5px] text-emerald-700 border border-emerald-200 bg-emerald-50 px-3 py-2 rounded-lg">
+                          Case evidence attached: {caseRefAttached}
+                        </span>
+                      )}
                     </div>
-
                   </div>
                   <ConfidenceBar value={results.takedown.confidence} color="indigo" />
                 </div>
@@ -670,7 +416,7 @@ function InvestigateContent() {
                 Results are based on a continuously updated dataset.
               </p>
               <button
-                onClick={() => { setResults(null); setInput(""); setContentUrl(""); setDraftCopied(false); setScriptCopied(false); setCaseRefAttached(null); setFileHashAttached(null); setReportCaseId(null); inputRef.current?.focus(); }}
+                onClick={() => { setResults(null); setInput(""); setCaseRefAttached(null); setReportCaseId(null); inputRef.current?.focus(); }}
                 className="text-[12px] text-indigo-600 hover:underline"
               >
                 Look up another domain
@@ -693,7 +439,7 @@ function InvestigateContent() {
               Paste the URL where your content appears
             </p>
             <p className="text-[12px] text-[#9ca3af] max-w-xs mx-auto">
-              Sniffer will find the removal contact and generate a ready-to-send request with your evidence attached.
+              Sniffer will map infrastructure and route metadata so you can continue to Step 3 for final takedown action.
             </p>
           </div>
         )}
@@ -709,34 +455,12 @@ function formatCaseRef(caseId: string): string {
   return `SNF-${caseId.slice(0, 4).toUpperCase()}-${caseId.slice(4, 8).toUpperCase()}-${caseId.slice(9, 13).toUpperCase()}`;
 }
 
-function buildEmailDraft(
-  domain: string,
-  contentUrl: string,
-  caseRef?: string | null,
-  fileHash?: string | null,
-): string {
-  const date = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-  const urlLine = contentUrl.trim() ? `\nContent URL: ${contentUrl.trim()}\n` : "";
-  const evidenceBlock = caseRef
-    ? `\n──────────────────────────────────────
-Forensic Evidence (Sniffer · Impic Labs)
-Case Reference: ${caseRef}${fileHash ? `\nSHA-256 Hash:   ${fileHash}` : ""}
-──────────────────────────────────────\n`
-    : "";
-  return `Dear ${domain} Content Moderation Team,\n\nI am formally requesting the immediate removal of content hosted on ${domain} that was published without my knowledge or consent.${urlLine}${evidenceBlock}\nThis material is a serious violation of my privacy and your platform's own terms of service. I request its complete removal — including all thumbnails, previews, and cached copies — as a matter of urgency.\n\nPlease confirm removal within 48 hours. Failure to act will result in escalation to your hosting provider, domain registrar, and relevant legal authorities.\n\nRegards,\n[Your Full Name]\n${date}`;
-}
-
 export default function InvestigatePage() {
   return (
     <Suspense>
       <InvestigateContent />
     </Suspense>
   );
-}
-
-function buildFormScript(domain: string, contentUrl: string): string {
-  const urlLine = contentUrl.trim() ? ` The specific content is located at: ${contentUrl.trim()}.` : "";
-  return `I am formally requesting the removal of content hosted on ${domain} that was published without my consent.${urlLine} This is a serious violation of my privacy. I demand its immediate and complete removal, including all cached copies, thumbnails, and any derivatives. Failure to act within 48 hours will result in escalation to the hosting provider, domain registrar, and relevant authorities.`;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────

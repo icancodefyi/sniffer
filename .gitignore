@@ -45,3 +45,4 @@ node_modules
 __pycache__
 .next
 .venv
+supported-platforms

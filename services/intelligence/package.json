@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "uvicorn main:app --reload --host 0.0.0.0 --port 8002",
-    "start": "uvicorn main:app --host 0.0.0.0 --port 8002",
-    "install:py": "pip install -r requirements.txt"
+    "dev": "..\\.venv\\Scripts\\python.exe -m uvicorn main:app --reload --host 0.0.0.0 --port 8002",
+    "start": "..\\.venv\\Scripts\\python.exe -m uvicorn main:app --host 0.0.0.0 --port 8002",
+    "install:py": "..\\.venv\\Scripts\\python.exe -m pip install -r requirements.txt"
   }
 }

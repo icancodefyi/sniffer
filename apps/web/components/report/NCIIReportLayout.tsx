@@ -1,9 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
 import Link from "next/link";
 import { ContentTrace } from "./ContentTrace";
-import { LeakActionConsole } from "./LeakActionConsole";
 import type { CaseData } from "./types";
 import { buildCaseRef } from "./utils";
 import { formatDate } from "./utils";
@@ -21,8 +19,6 @@ interface Props {
   onSaveCase: () => void;
   sessionUserId?: string;
 }
-
-const LeakActionConsoleBlock = LeakActionConsole as unknown as (props: { caseId: string }) => ReactNode;
 
 export function NCIIReportLayout({
   caseId,
@@ -193,30 +189,27 @@ export function NCIIReportLayout({
         {/* ── Hero: Leak Discovery Scan ────────────────────────────────── */}
         <ContentTrace caseId={caseId} />
 
-        {/* ── Embedded removal workflow ───────────────────────────────── */}
-        <LeakActionConsoleBlock caseId={caseId} />
-
         <div className="mb-8 rounded-xl border border-[#e8e4de] bg-white overflow-hidden">
           <div className="px-5 py-4 border-b border-[#f0ede8]">
-            <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest">Formal Notice</p>
+            <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest">Next Step</p>
           </div>
           <div className="px-5 py-5 space-y-4">
-            <p className="text-[13px] font-semibold text-[#0a0a0a]">Generate a formal takedown notice only if you need a written filing</p>
+            <p className="text-[13px] font-semibold text-[#0a0a0a]">This page is evidence only</p>
             <p className="text-[12.5px] text-[#6b7280] leading-relaxed">
-              The removal console above is the fast path for the demo. Use the notice generator only when you need a document to send to a platform, host, or legal contact.
+              Continue to Investigate to find contact routes for each target domain. Then move to Takedown to generate and send your final notice.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/takedown"
-                className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#e8e4de] text-[#374151] text-[13px] font-medium rounded-full hover:border-[#0a0a0a] transition-colors"
+                href={`/investigate?caseId=${caseId}`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0a0a0a] text-white text-[13px] font-medium rounded-full hover:bg-[#1a1a1a] transition-colors"
               >
-                Generate Takedown Notice
+                Continue to Investigate
               </Link>
               <Link
-                href={`/investigate?caseId=${caseId}`}
+                href={`/takedown?caseId=${caseId}`}
                 className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#e8e4de] text-[#374151] text-[13px] font-medium rounded-full hover:border-[#0a0a0a] transition-colors"
               >
-                Open Full Domain Workspace
+                Go to Takedown
               </Link>
             </div>
           </div>

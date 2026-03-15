@@ -66,10 +66,21 @@ export function TakedownGuidance({ platform, steps, caseId: _caseId, fileHash, c
 
   useEffect(() => {
     if (!domain) return;
+
+    // Known platforms already have local, curated steps. Do not block UI on remote services.
+    if (hasSteps) {
+      setFetching(false);
+      return;
+    }
+
+    const timeoutMs = 7000;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     setFetching(true);
     Promise.allSettled([
-      fetch(`/api/takedown/${encodeURIComponent(domain)}`),
-      fetch(`/api/intelligence/${encodeURIComponent(domain)}`),
+      fetch(`/api/takedown/${encodeURIComponent(domain)}`, { signal: controller.signal }),
+      fetch(`/api/intelligence/${encodeURIComponent(domain)}`, { signal: controller.signal }),
     ]).then(([tdRes, intelRes]) => {
       if (tdRes.status === "fulfilled" && tdRes.value.ok) {
         void (tdRes.value.json() as Promise<TakedownData>).then(setTakedown);
@@ -77,8 +88,16 @@ export function TakedownGuidance({ platform, steps, caseId: _caseId, fileHash, c
       if (intelRes.status === "fulfilled" && intelRes.value.ok) {
         void (intelRes.value.json() as Promise<IntelligenceData>).then(setIntelligence);
       }
-    }).finally(() => setFetching(false));
-  }, [domain]);
+    }).finally(() => {
+      clearTimeout(timeoutId);
+      setFetching(false);
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [domain, hasSteps]);
 
   if (!hasSteps && !domain) return null;
 

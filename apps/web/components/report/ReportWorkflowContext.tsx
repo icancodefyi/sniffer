@@ -64,7 +64,7 @@ export function ReportWorkflowProvider({
     setLoading(true);
     setFetchError(null);
 
-    fetch(`${API_URL}/api/cases/${caseId}`)
+    fetch(`/api/cases/${caseId}`)
       .then((r) => {
         if (!r.ok) throw new Error("Case not found");
         return r.json() as Promise<CaseData>;
@@ -77,10 +77,13 @@ export function ReportWorkflowProvider({
           return;
         }
 
-        const a = await fetch(`${API_URL}/api/analysis/${caseId}/result`).then((r) => {
-          if (!r.ok) throw new Error("Analysis result not found");
-          return r.json() as Promise<AnalysisResult>;
-        });
+        const aRes = await fetch(`${API_URL}/api/analysis/${caseId}/result`);
+        if (!aRes.ok) {
+          // Case is still openable without a computed analysis result.
+          setAnalysis(null);
+          return;
+        }
+        const a = (await aRes.json()) as AnalysisResult;
         setAnalysis(a);
       })
       .catch((e: unknown) => {

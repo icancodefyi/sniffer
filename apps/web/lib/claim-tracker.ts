@@ -1,6 +1,14 @@
 import clientPromise from "@/lib/mongodb";
 
-export type ClaimEventType = "case_created" | "case_saved" | "report_viewed";
+export type ClaimEventType =
+  | "case_created"
+  | "case_saved"
+  | "report_viewed"
+  | "escalation_requested"
+  | "platform_report_submitted"
+  | "takedown_requested"
+  | "takedown_rejected"
+  | "content_removed_confirmed";
 
 interface RecordClaimEventInput {
   eventType: ClaimEventType;

@@ -9,10 +9,10 @@ import { AuditTrail } from "@/components/report/AuditTrail";
 
 export default function TakedownStepPage() {
   const { caseId, caseData, analysis, hashCopied, copyHash } = useReportWorkflow();
-  if (!caseData || !analysis) return null;
+  if (!caseData) return null;
 
   const caseRef = buildCaseRef(caseId);
-  const timeline = buildTimeline(analysis, caseRef);
+  const timeline = analysis ? buildTimeline(analysis, caseRef) : [];
   const takedownSteps = TAKEDOWN_GUIDES[caseData.platform_source];
 
   return (
@@ -28,13 +28,24 @@ export default function TakedownStepPage() {
         platform={caseData.platform_source}
         steps={takedownSteps}
         caseId={caseId}
-        fileHash={analysis.file_hash}
+        fileHash={analysis?.file_hash}
         caseRef={caseRef}
       />
 
-      <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
-      <EvidenceTimeline entries={timeline} />
-      {analysis.audit && <AuditTrail audit={analysis.audit} />}
+      {analysis ? (
+        <>
+          <EvidenceMetadata analysis={analysis} hashCopied={hashCopied} onCopy={copyHash} />
+          <EvidenceTimeline entries={timeline} />
+          {analysis.audit && <AuditTrail audit={analysis.audit} />}
+        </>
+      ) : (
+        <div className="mb-8 rounded-xl border border-[#e8e4de] bg-white px-5 py-4">
+          <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-2">Forensic Metadata</p>
+          <p className="text-[12.5px] text-[#6b7280] leading-relaxed">
+            No forensic payload is attached to this case yet. You can still proceed with platform takedown using case reference {caseRef}.
+          </p>
+        </div>
+      )}
     </>
   );
 }

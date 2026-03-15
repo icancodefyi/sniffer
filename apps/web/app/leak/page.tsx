@@ -7,7 +7,9 @@ import Link from "next/link";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const SOURCES = [
-  { value: "Adult video site", desc: "e.g. PornHub, xVideos, RedTube" },
+  { value: "mydesi.ltd", desc: "Verified dataset domain" },
+  { value: "fsiblog.pro", desc: "Verified dataset domain" },
+  { value: "viralkand.com", desc: "Verified dataset domain" },
   { value: "Telegram", desc: "Private channel or group share" },
   { value: "Instagram", desc: "Story, post, or reel" },
   { value: "Twitter / X", desc: "Post or direct message" },

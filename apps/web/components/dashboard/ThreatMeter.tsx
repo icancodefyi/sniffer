@@ -10,10 +10,8 @@ function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle
   return `M ${s.x.toFixed(2)} ${s.y.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(2)} ${e.y.toFixed(2)}`;
 }
 
-const SCORE = 67;
 const CX = 120, CY = 130, R = 82;
 const START = 225, SWEEP = 270;
-const FILL_ANGLE = START + (SCORE / 100) * SWEEP;
 
 function getColor(s: number) {
   if (s <= 40) return "#22c55e";
@@ -22,11 +20,27 @@ function getColor(s: number) {
   return "#ef4444";
 }
 
-const FILL_COLOR = getColor(SCORE);
-const RISK_LABEL = SCORE <= 40 ? "Low Risk" : SCORE <= 65 ? "Moderate" : SCORE <= 85 ? "Elevated Risk" : "Critical";
 const TICKS = [0, 25, 50, 75, 100];
 
-export function ThreatMeter() {
+interface ThreatMeterProps {
+  score?: number;
+  aiDetections?: number;
+  tamperSignals?: number;
+  registryHits?: number;
+}
+
+export function ThreatMeter({
+  score = 67,
+  aiDetections = 142,
+  tamperSignals = 89,
+  registryHits = 23,
+}: ThreatMeterProps) {
+  const safeScore = Math.max(0, Math.min(100, Math.round(score)));
+  const fillAngle = START + (safeScore / 100) * SWEEP;
+  const fillColor = getColor(safeScore);
+  const riskLabel =
+    safeScore <= 40 ? "Low Risk" : safeScore <= 65 ? "Moderate" : safeScore <= 85 ? "Elevated Risk" : "Critical";
+
   return (
     <div className="rounded-xl border border-[#e8e4de] bg-white p-5 flex flex-col h-full">
       <div className="flex items-center justify-between mb-2">
@@ -49,9 +63,9 @@ export function ThreatMeter() {
           />
           {/* Filled arc */}
           <path
-            d={arcPath(CX, CY, R, START, FILL_ANGLE)}
+            d={arcPath(CX, CY, R, START, fillAngle)}
             fill="none"
-            stroke={FILL_COLOR}
+            stroke={fillColor}
             strokeWidth="15"
             strokeLinecap="round"
           />
@@ -81,12 +95,12 @@ export function ThreatMeter() {
           })}
           {/* Needle tip dot */}
           {(() => {
-            const tip = polarToCartesian(CX, CY, R, FILL_ANGLE);
-            return <circle cx={tip.x.toFixed(1)} cy={tip.y.toFixed(1)} r="5.5" fill={FILL_COLOR} stroke="white" strokeWidth="2" />;
+            const tip = polarToCartesian(CX, CY, R, fillAngle);
+            return <circle cx={tip.x.toFixed(1)} cy={tip.y.toFixed(1)} r="5.5" fill={fillColor} stroke="white" strokeWidth="2" />;
           })()}
           {/* Score number */}
           <text x={CX} y={CY - 8} textAnchor="middle" style={{ fontFamily: "ui-monospace,monospace", fontSize: "48px", fontWeight: "800", fill: "#0a0a0a" }}>
-            {SCORE}
+            {safeScore}
           </text>
           <text x={CX} y={CY + 16} textAnchor="middle" style={{ fontFamily: "ui-monospace,monospace", fontSize: "11px", fill: "#a8a29e", letterSpacing: "0.06em" }}>
             / 100
@@ -94,8 +108,8 @@ export function ThreatMeter() {
         </svg>
 
         <div className="text-center -mt-1">
-          <p className="text-[1.5rem] font-semibold tracking-tight" style={{ color: FILL_COLOR }}>
-            {RISK_LABEL}
+          <p className="text-[1.5rem] font-semibold tracking-tight" style={{ color: fillColor }}>
+            {riskLabel}
           </p>
           <p className="text-[11.5px] text-[#9ca3af] mt-1 max-w-55 leading-snug">
             Composite signal across all forensic detection layers
@@ -105,9 +119,9 @@ export function ThreatMeter() {
 
       <div className="grid grid-cols-3 mt-5 pt-4 border-t border-[#f0ede8]">
         {[
-          { label: "AI Detections", value: "142" },
-          { label: "Tamper Signals", value: "89" },
-          { label: "Registry Hits", value: "23" },
+          { label: "AI Detections", value: String(aiDetections) },
+          { label: "Tamper Signals", value: String(tamperSignals) },
+          { label: "Registry Hits", value: String(registryHits) },
         ].map((s, i) => (
           <div key={s.label} className={`text-center py-1 ${i < 2 ? "border-r border-[#f0ede8]" : ""}`}>
             <p className="text-[19px] font-semibold text-[#0a0a0a] font-mono tabular-nums">{s.value}</p>

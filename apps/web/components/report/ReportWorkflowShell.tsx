@@ -112,24 +112,13 @@ export function ReportWorkflowShell({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!analysis) {
-    return (
-      <div className="min-h-screen bg-[#fafaf8] flex items-center justify-center">
-        <div className="text-center max-w-sm px-6">
-          <p className="text-[14px] text-red-600 mb-4">Analysis result not found</p>
-          <Link href="/verify" className="text-[13px] text-indigo-600 hover:underline">
-            ← Start a new verification
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const caseRef = buildCaseRef(caseId);
-  const verdict = buildVerdict(analysis);
-  const verdictColor = buildVerdictColor(analysis);
+  const verdict = analysis ? buildVerdict(analysis) : "ANALYSIS PENDING";
+  const verdictColor = analysis
+    ? buildVerdictColor(analysis)
+    : "text-slate-700 bg-slate-50 border-slate-300";
   const headerCertainty =
-    analysis.forensic_certainty === "AI-Generated (C2PA Verified)"
+    analysis?.forensic_certainty === "AI-Generated (C2PA Verified)"
       ? analysis.forensic_certainty
       : undefined;
 
@@ -216,8 +205,17 @@ export function ReportWorkflowShell({ children }: { children: React.ReactNode })
           verdictColor={verdictColor}
           caseData={caseData}
           forensicCertainty={headerCertainty}
-          tamperRegionCount={analysis.tamper_regions?.length}
+          tamperRegionCount={analysis?.tamper_regions?.length}
         />
+
+        {!analysis && (
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-[10px] font-mono text-amber-700 uppercase tracking-widest mb-1">Case Opened · Partial Data</p>
+            <p className="text-[12.5px] text-amber-800 leading-relaxed">
+              This case exists in the database, but forensic analysis output is not attached yet. Distribution and takedown steps remain available.
+            </p>
+          </div>
+        )}
 
         <StepNav caseId={caseId} />
 

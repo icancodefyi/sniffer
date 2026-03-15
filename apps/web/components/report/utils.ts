@@ -21,6 +21,24 @@ export function buildCaseRef(caseId: string): string {
 }
 
 export const TAKEDOWN_GUIDES: Record<string, string[]> = {
+  "mydesi.ltd": [
+    "Open the specific page and copy the direct URL",
+    "Go to mydesi.ltd support or abuse contact page",
+    "Submit non-consensual intimate content complaint with case evidence",
+    "Attach Case ID and SHA-256 hash from this report",
+  ],
+  "fsiblog.pro": [
+    "Copy the exact content URL",
+    "Use fsiblog.pro abuse or takedown contact channel",
+    "Select non-consensual or privacy violation category",
+    "Include Case ID, hash evidence, and request cache removal",
+  ],
+  "viralkand.com": [
+    "Capture page evidence and copy direct link",
+    "Open viralkand.com DMCA or abuse reporting form",
+    "Flag as non-consensual intimate content",
+    "Attach forensic report reference and hash",
+  ],
   Instagram: [
     "Tap \u00b7\u00b7\u00b7 (three dots) on the post",
     'Select "Report" \u2192 "It\'s inappropriate"',

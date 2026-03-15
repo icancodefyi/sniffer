@@ -1,8 +1,11 @@
 export const TOTAL_STEPS = 3;
 
 export const PLATFORMS = [
-  { value: "Instagram" },
+  { value: "mydesi.ltd" },
+  { value: "fsiblog.pro" },
+  { value: "viralkand.com" },
   { value: "Telegram" },
+  { value: "Instagram" },
   { value: "Twitter / X" },
   { value: "WhatsApp" },
   { value: "Facebook" },

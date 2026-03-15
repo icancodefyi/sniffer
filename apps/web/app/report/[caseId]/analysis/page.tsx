@@ -18,7 +18,25 @@ import { C2PAProvenance } from "@/components/report/C2PAProvenance";
 
 export default function AnalysisStepPage() {
   const { caseId, caseData, analysis, suspiciousImg, referenceImg } = useReportWorkflow();
-  if (!caseData || !analysis) return null;
+  if (!caseData) return null;
+
+  if (!analysis) {
+    return (
+      <div className="mb-8 rounded-xl border border-[#e8e4de] bg-white px-5 py-4">
+        <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-2">Step 1 · Analyze Evidence</p>
+        <p className="text-[13px] font-semibold text-[#0a0a0a] mb-1">Analysis is not available for this case yet</p>
+        <p className="text-[12.5px] text-[#6b7280] leading-relaxed mb-3">
+          The case record exists and can be tracked, but no forensic output has been generated for this case ID.
+        </p>
+        <Link
+          href={`/report/${caseId}/distribution`}
+          className="inline-flex items-center gap-2 text-[12px] font-medium bg-[#0a0a0a] text-white px-4 py-2 rounded-lg hover:bg-[#1a1a1a] transition-colors"
+        >
+          Continue to distribution trace
+        </Link>
+      </div>
+    );
+  }
 
   const score = buildFinalRiskScore(analysis);
   const summaryText = buildModelFirstSummary(analysis);

@@ -25,18 +25,31 @@ export async function POST(req: NextRequest) {
   }
 
   const client = await clientPromise;
-  const col = client.db("snifferX").collection("saved_cases");
+  const now = new Date();
+  const createdAtSec = Math.floor(now.getTime() / 1000);
+  const col = client.db("snifferX").collection("cases");
 
-  // Upsert — idempotent, no duplicate saves
+  // Upsert the case shell if needed and mark this user as having saved it.
   await col.updateOne(
-    { userId, caseId },
+    { case_id: caseId },
     {
+      $set: {
+        case_ref: caseRef ?? null,
+        platform_source: domain ?? "Other",
+        updated_at: now,
+        last_saved_at: now,
+      },
       $setOnInsert: {
-        userId,
-        caseId,
-        domain: domain ?? null,
-        caseRef: caseRef ?? null,
-        savedAt: new Date(),
+        case_id: caseId,
+        created_at: createdAtSec,
+        status: "pending",
+        issue_type: "Other",
+        pipeline_type: "deepfake",
+        anonymous: true,
+        no_further_tracking: false,
+      },
+      $addToSet: {
+        saved_by_users: userId,
       },
     },
     { upsert: true },

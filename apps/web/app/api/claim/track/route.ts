@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getClaimStats, recordClaimEvent } from "@/lib/claim-tracker";
 
 interface TrackBody {
-  eventType?: "case_created" | "case_saved" | "report_viewed";
+  eventType?:
+    | "case_created"
+    | "case_saved"
+    | "report_viewed"
+    | "escalation_requested"
+    | "platform_report_submitted"
+    | "takedown_requested"
+    | "takedown_rejected"
+    | "content_removed_confirmed";
   caseId?: string;
   platformSource?: string;
   issueType?: string;

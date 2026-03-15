@@ -6,7 +6,26 @@ const PLATFORMS = [
   { name: "Other", pct: 7, color: "#9ca3af", cases: 29 },
 ];
 
-export function PlatformDistribution() {
+const FALLBACK_COLORS = ["#818cf8", "#f472b6", "#34d399", "#fbbf24", "#60a5fa", "#9ca3af"];
+
+interface PlatformItem {
+  name: string;
+  cases: number;
+  pct: number;
+  color?: string;
+}
+
+interface PlatformDistributionProps {
+  items?: PlatformItem[];
+  totalLabel?: string;
+}
+
+export function PlatformDistribution({ items, totalLabel }: PlatformDistributionProps) {
+  const platforms = (items && items.length > 0 ? items : PLATFORMS).map((item, index) => ({
+    ...item,
+    color: item.color ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+  }));
+
   return (
     <div className="rounded-xl border border-[#e8e4de] bg-white p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
@@ -15,7 +34,7 @@ export function PlatformDistribution() {
       </div>
 
       <div className="flex-1 flex flex-col justify-between gap-3.5">
-        {PLATFORMS.map((p) => (
+        {platforms.map((p) => (
           <div key={p.name}>
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2">
@@ -40,7 +59,7 @@ export function PlatformDistribution() {
       </div>
 
       <div className="mt-4 pt-3 border-t border-[#f0ede8] flex items-center justify-between">
-        <p className="text-[10px] font-mono text-[#a8a29e]">412 total cases analysed</p>
+        <p className="text-[10px] font-mono text-[#a8a29e]">{totalLabel ?? "412 total cases analysed"}</p>
         <p className="text-[10px] font-mono text-[#c4bdb5]">Based on platform field</p>
       </div>
     </div>

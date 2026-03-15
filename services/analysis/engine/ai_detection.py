@@ -31,6 +31,7 @@ from PIL import Image
 from scipy.ndimage import gaussian_filter, label as ndlabel
 from scipy.stats import kurtosis as sp_kurtosis
 
+from .deepfake_model import predict_deepfake_probability
 from .models import AiDetectionResult
 
 # ── Tuning constants ──────────────────────────────────────────────────────────
@@ -38,6 +39,8 @@ _FFT_GRID_THRESHOLD = 3.5    # peak/median ratio in power spectrum to flag
 _PRNU_KURTOSIS_THRESHOLD = 4.5  # kurtosis above this = flat AI noise
 _CA_OFFSET_THRESHOLD = 0.4   # pixels; below this = suspiciously perfect
 _AI_FLAG_THRESHOLD = 0.55    # combined probability to flag
+_MODEL_WEIGHT = 0.75
+_HEURISTIC_WEIGHT = 0.25
 
 
 def _fft_grid_score(grey_arr: np.ndarray) -> tuple[float, bool]:
@@ -182,23 +185,41 @@ def run_ai_detection(image_bytes: bytes) -> AiDetectionResult:
     # ── Combine: weighted vote ─────────────────────────────────────────────
     # FFT is strongest signal (0.5), PRNU medium (0.3), CA weakest (0.2)
     # Each signal contributes full weight only if flagged.
-    prob = (
+    heuristic_prob = (
         (fft_score * 0.50 if fft_flag else fft_score * 0.15) +
         (prnu * 0.30 if prnu_flag else prnu * 0.10) +
         ((1.0 - ca) * 0.20 if ca_flag else (1.0 - ca) * 0.05)
     )
     # Guard against NaN from edge cases (uniform images etc.)
-    if not (prob == prob):  # NaN check
-        prob = 0.0
-    prob = round(min(max(prob, 0.0), 1.0), 4)
+    if not (heuristic_prob == heuristic_prob):  # NaN check
+        heuristic_prob = 0.0
+    heuristic_prob = round(min(max(heuristic_prob, 0.0), 1.0), 4)
+
+    model_prob, model_name, model_label, model_error = predict_deepfake_probability(image_bytes)
+
+    if model_error is None:
+        final_prob = round(
+            min(max(model_prob * _MODEL_WEIGHT + heuristic_prob * _HEURISTIC_WEIGHT, 0.0), 1.0),
+            4,
+        )
+        source = "hybrid_model_plus_forensics"
+    else:
+        final_prob = heuristic_prob
+        source = "heuristic_fallback"
 
     return AiDetectionResult(
-        ai_probability=prob,
-        ai_flagged=prob >= _AI_FLAG_THRESHOLD,
+        ai_probability=final_prob,
+        ai_flagged=final_prob >= _AI_FLAG_THRESHOLD,
         fft_grid_score=fft_score,
         fft_grid_flagged=fft_flag,
         prnu_score=prnu,
         prnu_flagged=prnu_flag,
         ca_score=ca,
         ca_flagged=ca_flag,
+        model_name=model_name,
+        model_label=model_label,
+        model_probability=model_prob if model_error is None else None,
+        model_error=model_error,
+        heuristic_probability=heuristic_prob,
+        signal_source=source,
     )

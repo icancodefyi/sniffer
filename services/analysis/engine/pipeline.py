@@ -227,13 +227,18 @@ def run_pipeline(
             "weight": 0.0,  # informational only — no score impact unless invalid
         },
         {
-            "name": "AI Generation Detection (FFT\u00b7PRNU\u00b7CA)",
-            # When C2PA manifest definitively declares AI, the spectral probability
-            # is secondary evidence. Surface the manifest-derived certainty instead.
+            "name": "AI Generation Detection (HF Model + FFT\u00b7PRNU\u00b7CA)",
+            # When C2PA manifest definitively declares AI, model/spectral output is
+            # supporting evidence and should not override provenance certainty.
             "value": (
-                "AI-Generated \u2014 Confirmed by C2PA Manifest"
+                "AI-Generated - Confirmed by C2PA Manifest"
                 if c2pa_result.ai_generated and c2pa_status_str in ("verified", "trust_warning")
-                else f"{round(ai_detection.ai_probability * 100)}% AI probability"
+                else (
+                    f"{round(ai_detection.model_probability * 100)}% model, "
+                    f"{round(ai_detection.ai_probability * 100)}% fused"
+                    if ai_detection.model_probability is not None
+                    else f"{round(ai_detection.ai_probability * 100)}% heuristic"
+                )
             ),
             "flagged": ai_detection.ai_flagged or (
                 c2pa_result.ai_generated and c2pa_status_str in ("verified", "trust_warning")

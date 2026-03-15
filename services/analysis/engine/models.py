@@ -98,6 +98,12 @@ class AiDetectionResult(BaseModel):
     prnu_flagged: bool
     ca_score: float  # 0 = perfect channel alignment (AI); 1 = strong CA (real)
     ca_flagged: bool
+    model_name: Optional[str] = None
+    model_label: Optional[str] = None
+    model_probability: Optional[float] = None
+    model_error: Optional[str] = None
+    heuristic_probability: Optional[float] = None
+    signal_source: str = "heuristic"
 
 
 class DiscoveryMatch(BaseModel):

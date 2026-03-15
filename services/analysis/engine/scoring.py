@@ -14,7 +14,9 @@ _W_ELA = 0.13   # reduced by 0.02 to make room for AI signal
 _W_DCT = 0.09   # reduced by 0.01
 _W_NOISE = 0.10
 _W_KEYPOINT = 0.05
-_W_AI = 0.08    # AI generation detection (referenceless; always active)
+_W_AI = 0.08              # AI generation detection — with reference
+_W_AI_NO_REF = 0.22       # raised weight; neural model is primary signal without reference
+_MODEL_HIGH_CONF = 0.80   # threshold: model is highly confident → relax no-ref floor
 
 # ── Forensic certainty thresholds ────────────────────────────────────────────
 # Labels represent certainty that the image was manipulated.
@@ -79,14 +81,15 @@ def compute_score(
     if double_compression:
         score -= _W_DCT * 100
 
-    # AI-generation penalty (referenceless — always applied)
+    # AI-generation penalty (always applied — referenceless signal)
+    # Without reference the neural model is the primary signal; use higher weight.
     # If C2PA manifest definitively declares AI-generated content, treat as
-    # 100% AI probability for scoring — the manifest is stronger evidence
-    # than our spectral heuristics alone.
+    # 100% AI probability — the manifest is stronger evidence.
     effective_ai_prob = ai_probability
     if c2pa_ai_generated and c2pa_status in ("verified", "trust_warning"):
         effective_ai_prob = max(ai_probability, 1.0)  # treat as certain
-    ai_penalty = effective_ai_prob * (_W_AI * 100)
+    active_ai_weight = _W_AI_NO_REF if not has_reference else _W_AI
+    ai_penalty = effective_ai_prob * (active_ai_weight * 100)
     score -= ai_penalty
 
     # C2PA penalties
@@ -99,10 +102,14 @@ def compute_score(
     if metadata_integrity == "anomalies_detected":
         score -= 5.0
 
-    # Without reference, cap penalty at a conservative level so we
-    # never claim "manipulation" based purely on ELA/DCT alone.
+    # Without reference, apply a conservative floor so ELA/DCT alone
+    # can never convict.  But if the neural model is highly confident
+    # (>= 80%) the floor is relaxed — model evidence is strong enough.
     if not has_reference:
-        score = max(score, 45.0)
+        if ai_probability >= _MODEL_HIGH_CONF:
+            score = max(score, 20.0)   # low floor: neural model is confident
+        else:
+            score = max(score, 45.0)   # conservative floor for uncertain cases
 
     score = round(max(0.0, min(100.0, score)))
 

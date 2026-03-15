@@ -61,6 +61,12 @@ export interface AiDetectionResult {
   prnu_flagged: boolean;
   ca_score: number;
   ca_flagged: boolean;
+  model_name?: string | null;
+  model_label?: string | null;
+  model_probability?: number | null;
+  model_error?: string | null;
+  heuristic_probability?: number | null;
+  signal_source?: string | null;
 }
 
 export interface DiscoveryMatch {

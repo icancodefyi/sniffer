@@ -63,12 +63,15 @@ export interface SignalRow {
 export function buildSignalRows(analysis: AnalysisResult): SignalRow[] {
   // Use rich per-algorithm signals from the full pipeline when available
   if (analysis.algorithm_signals && analysis.algorithm_signals.length > 0) {
-    return analysis.algorithm_signals.map((sig) => ({
-      label: sig.name,
-      value: sig.value,
-      note: `Weight: ${Math.round(sig.weight * 100)}%`,
-      flagged: sig.flagged,
-    }));
+    return analysis.algorithm_signals
+      // Strip the AI model row — it is shown as a dedicated card, not a table row
+      .filter((sig) => !sig.name.startsWith("AI Generation Detection"))
+      .map((sig) => ({
+        label: sig.name,
+        value: sig.value,
+        note: `Weight: ${Math.round(sig.weight * 100)}%`,
+        flagged: sig.flagged,
+      }));
   }
 
   // Fallback: legacy derived-from-score signals (backward compat)

@@ -165,14 +165,13 @@ def build_explanation(
         )
     elif ai_flagged:
         parts.append(
-            f"Spectral and signal analysis indicates a {round(ai_probability * 100)}\u202f% probability "
-            "that this image was AI-generated: the 2D FFT power spectrum shows periodic grid artefacts "
-            "consistent with latent-space upsampling, and/or the noise residual lacks the camera "
-            "sensor fingerprint (PRNU) characteristic of real photography."
+            f"Model-assisted AI-generation analysis indicates a {round(ai_probability * 100)}\u202f% fused probability "
+            "that this image was AI-generated. This signal combines a pretrained deepfake classifier "
+            "with independent forensic artefact checks (FFT/PRNU/chromatic-aberration consistency)."
         )
     elif ai_probability > 0.30:
         parts.append(
-            f"Weak AI-generation signals detected ({round(ai_probability * 100)}\u202f% probability); "
+            f"Weak AI-generation signals detected ({round(ai_probability * 100)}\u202f% fused probability); "
             "result is below the flagging threshold but warrants manual review."
         )
 

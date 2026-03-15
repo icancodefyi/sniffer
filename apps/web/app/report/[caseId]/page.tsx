@@ -25,6 +25,7 @@ import { AuditTrail } from "@/components/report/AuditTrail";
 import { C2PAProvenance } from "@/components/report/C2PAProvenance";
 import { ContentTrace } from "@/components/report/ContentTrace";
 import { NCIIReportLayout } from "@/components/report/NCIIReportLayout";
+import { NeuralModelVerdict } from "@/components/report/NeuralModelVerdict";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -429,6 +430,9 @@ function ReportContent() {
             </div>
 
             <ForensicSignals rows={signalRows} />
+
+
+            <NeuralModelVerdict ai={analysis.ai_detection} />
 
             <TamperHeatmap
               elaHeatmap={analysis.ela_heatmap}

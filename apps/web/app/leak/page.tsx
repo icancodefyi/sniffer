@@ -50,6 +50,23 @@ export default function LeakPage() {
         throw new Error((err as { detail?: string }).detail || "Failed to create case");
       }
       const json = await res.json() as { case_id: string };
+
+      await fetch("/api/claim/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventType: "case_created",
+          caseId: json.case_id,
+          platformSource: source,
+          issueType: "Non-consensual image sharing",
+          pipelineType: "ncii",
+          anonymous: true,
+        }),
+        keepalive: true,
+      }).catch(() => {
+        // Tracking is best-effort and should not block user flow
+      });
+
       router.push(`/leak/upload?caseId=${json.case_id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "An error occurred. Please try again.");

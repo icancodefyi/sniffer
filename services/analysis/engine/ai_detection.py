@@ -39,8 +39,8 @@ _FFT_GRID_THRESHOLD = 3.5    # peak/median ratio in power spectrum to flag
 _PRNU_KURTOSIS_THRESHOLD = 4.5  # kurtosis above this = flat AI noise
 _CA_OFFSET_THRESHOLD = 0.4   # pixels; below this = suspiciously perfect
 _AI_FLAG_THRESHOLD = 0.55    # combined probability to flag
-_MODEL_WEIGHT = 0.75
-_HEURISTIC_WEIGHT = 0.25
+_MODEL_WEIGHT = 0.95
+_HEURISTIC_WEIGHT = 0.05
 
 
 def _fft_grid_score(grey_arr: np.ndarray) -> tuple[float, bool]:

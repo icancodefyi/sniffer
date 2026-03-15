@@ -127,7 +127,7 @@ export function NeuralModelVerdict({ ai }: Props) {
                 <span className="text-[10.5px] text-[#9ca3af] font-mono">
                   Fused score: {Math.round(fusedProb * 100)}%
                   &nbsp;·&nbsp;
-                  75% model weight + 25% forensic weight
+                  95% model weight + 5% forensic weight
                 </span>
               </div>
             </>

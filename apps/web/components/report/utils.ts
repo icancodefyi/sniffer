@@ -60,12 +60,28 @@ export interface SignalRow {
   flagged: boolean;
 }
 
+export function buildFinalRiskScore(analysis: AnalysisResult): number {
+  const ai = analysis.ai_detection;
+  const hasNeuralModel =
+    ai != null && ai.model_probability != null && !ai.model_error;
+  if (hasNeuralModel) {
+    return Math.round(Math.min(Math.max(ai.ai_probability, 0), 1) * 100);
+  }
+  const manipulationProb = Math.min(
+    Math.max(analysis.manipulation_probability ?? (100 - analysis.authenticity_score) / 100, 0),
+    1,
+  );
+  return Math.round(manipulationProb * 100);
+}
+
 export function buildSignalRows(analysis: AnalysisResult): SignalRow[] {
   // Use rich per-algorithm signals from the full pipeline when available
   if (analysis.algorithm_signals && analysis.algorithm_signals.length > 0) {
     return analysis.algorithm_signals
       // Strip the AI model row — it is shown as a dedicated card, not a table row
       .filter((sig) => !sig.name.startsWith("AI Generation Detection"))
+      // Hide ELA in no-reference mode to avoid overemphasizing a single-image artefact
+      .filter((sig) => analysis.reference_based || !sig.name.includes("Error Level Analysis"))
       .map((sig) => ({
         label: sig.name,
         value: sig.value,
@@ -133,30 +149,94 @@ export function buildSignalRows(analysis: AnalysisResult): SignalRow[] {
 
 export function buildVerdict(analysis: AnalysisResult): string {
   if (analysis.forensic_certainty === "AI-Generated (C2PA Verified)") return "AI GENERATED";
-  if (analysis.forensic_certainty) return analysis.forensic_certainty.toUpperCase();
-  const score = analysis.authenticity_score;
-  if (score >= 70) return "LIKELY AUTHENTIC";
-  if (score >= 40) return "INCONCLUSIVE";
-  return "MANIPULATED";
+  const riskScore = buildFinalRiskScore(analysis);
+  if (riskScore >= 85) return "LIKELY MANIPULATED";
+  if (riskScore >= 70) return "HIGH SUSPICION";
+  if (riskScore >= 50) return "MEDIUM RISK";
+  if (riskScore >= 30) return "LOW SUSPICION";
+  return "LIKELY AUTHENTIC";
 }
 
 export function buildVerdictColor(analysis: AnalysisResult): string {
   const cert = analysis.forensic_certainty ?? "";
   if (cert === "AI-Generated (C2PA Verified)")
     return "text-red-800 bg-red-50 border-red-300";
-  if (cert.includes("Verified Authentic") || cert.includes("Likely Authentic"))
-    return "text-green-700 bg-green-50 border-green-200";
-  if (cert.includes("Near Certain") || cert.includes("Highly Probable"))
-    return "text-red-800 bg-red-50 border-red-300";
-  if (cert.includes("Probable"))
-    return "text-orange-700 bg-orange-50 border-orange-200";
-  if (cert.includes("Inconclusive"))
-    return "text-amber-700 bg-amber-50 border-amber-200";
-  // Fallback to score
-  const score = analysis.authenticity_score;
-  if (score >= 70) return "text-green-700 bg-green-50 border-green-200";
-  if (score >= 40) return "text-amber-700 bg-amber-50 border-amber-200";
-  return "text-red-700 bg-red-50 border-red-200";
+  const riskScore = buildFinalRiskScore(analysis);
+  if (riskScore >= 85) return "text-red-800 bg-red-50 border-red-300";
+  if (riskScore >= 70) return "text-orange-700 bg-orange-50 border-orange-200";
+  if (riskScore >= 50) return "text-amber-700 bg-amber-50 border-amber-200";
+  if (riskScore >= 30) return "text-yellow-700 bg-yellow-50 border-yellow-200";
+  return "text-green-700 bg-green-50 border-green-200";
+}
+
+export function buildModelFirstSummary(analysis: AnalysisResult): string {
+  const ai = analysis.ai_detection;
+  const hasNeuralModel = ai != null && ai.model_probability != null && !ai.model_error;
+  const riskScore = buildFinalRiskScore(analysis);
+
+  if (!hasNeuralModel) return analysis.explanation;
+
+  const modelPct = Math.round((ai?.model_probability ?? 0) * 100);
+  const forensicPct = Math.round((ai?.heuristic_probability ?? ai?.ai_probability ?? 0) * 100);
+  const fusedPct = Math.round((ai?.ai_probability ?? 0) * 100);
+
+  if (riskScore >= 85) {
+    return `Neural deepfake detection produced a high-confidence manipulation signal (${modelPct}%). Supporting forensic artifact checks produced ${forensicPct}% AI probability. The combined model-first fusion score is ${fusedPct}%, indicating a high likelihood that this image is AI-generated or manipulated.`;
+  }
+
+  if (riskScore >= 70) {
+    return `Neural deepfake detection returned a strong manipulation signal (${modelPct}%). Supporting forensic artifact checks produced ${forensicPct}% AI probability. The combined model-first fusion score is ${fusedPct}%, indicating elevated manipulation risk and recommending manual review.`;
+  }
+
+  if (riskScore >= 50) {
+    return `Neural deepfake detection returned a moderate signal (${modelPct}%), while forensic artifact checks produced ${forensicPct}% AI probability. The combined model-first fusion score is ${fusedPct}%, indicating medium risk. This is a review-required result, not definitive proof on its own.`;
+  }
+
+  if (riskScore >= 30) {
+    return `Neural deepfake detection returned a weak signal (${modelPct}%), with forensic artifact checks at ${forensicPct}%. The combined model-first fusion score is ${fusedPct}%, indicating low suspicion.`;
+  }
+
+  return `Neural deepfake detection returned a low manipulation signal (${modelPct}%) and forensic artifact checks remain low (${forensicPct}%). The combined model-first fusion score is ${fusedPct}%, consistent with likely authentic content.`;
+}
+
+export function buildActionPriority(score: number): {
+  title: string;
+  note: string;
+  tone: "critical" | "high" | "review" | "observe" | "low";
+} {
+  if (score >= 85) {
+    return {
+      title: "Urgent Action Recommended",
+      note: "High manipulation risk. Preserve evidence, initiate takedown, and escalate for legal review.",
+      tone: "critical",
+    };
+  }
+  if (score >= 70) {
+    return {
+      title: "High Priority Review",
+      note: "Strong manipulation indicators detected. Begin response workflow and verify source context.",
+      tone: "high",
+    };
+  }
+  if (score >= 50) {
+    return {
+      title: "Manual Review Required",
+      note: "Moderate risk. Validate with context and human review before final action.",
+      tone: "review",
+    };
+  }
+  if (score >= 30) {
+    return {
+      title: "Monitor",
+      note: "Low suspicion. Keep record and monitor recurrence or distribution.",
+      tone: "observe",
+    };
+  }
+  return {
+    title: "Low Immediate Risk",
+    note: "Current evidence is consistent with likely authentic content.",
+    tone: "low",
+  };
 }
 
 export interface TimelineEntry {
@@ -166,7 +246,8 @@ export interface TimelineEntry {
 }
 
 export function buildTimeline(analysis: AnalysisResult, caseRef: string): TimelineEntry[] {
-  const { timestamp: t, file_size, mime_type, authenticity_score: score, file_hash } = analysis;
+  const { timestamp: t, file_size, mime_type, file_hash } = analysis;
+  const riskScore = buildFinalRiskScore(analysis);
   return [
     { ts: t - 125, event: "Case created", detail: `Case ${caseRef} opened` },
     {
@@ -183,10 +264,10 @@ export function buildTimeline(analysis: AnalysisResult, caseRef: string): Timeli
       ts: t - 12,
       event: "Manipulation signals processed",
       detail: (() => {
-        const cert = analysis.forensic_certainty ?? "";
-        if (cert.includes("Manipulation")) return "Manipulation signals identified across analysis layers";
-        if (cert === "Inconclusive") return "Mixed signals detected — manual review recommended";
-        if (score < 70) return "Anomalies detected in analysis layers";
+        if (riskScore >= 85) return "High-confidence manipulation signal identified by model-first fusion";
+        if (riskScore >= 70) return "Strong manipulation indicators detected across analysis layers";
+        if (riskScore >= 50) return "Moderate anomalies detected — manual review recommended";
+        if (riskScore >= 30) return "Weak anomalies detected in analysis layers";
         return "No significant anomalies found";
       })(),
     },

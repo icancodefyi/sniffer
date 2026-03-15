@@ -13,7 +13,7 @@ function getConfidenceBand(prob: number): {
   dot: string;
 } {
   if (prob >= 0.80) return {
-    label: "High Confidence — Deepfake Detected",
+    label: "Supporting Evidence Snapshot",
     color: "text-red-700",
     barColor: "bg-red-500",
     bg: "bg-red-50",
@@ -21,7 +21,7 @@ function getConfidenceBand(prob: number): {
     dot: "bg-red-500",
   };
   if (prob >= 0.60) return {
-    label: "Moderate Confidence — Likely Deepfake",
+    label: "Supporting Evidence Snapshot",
     color: "text-amber-700",
     barColor: "bg-amber-400",
     bg: "bg-amber-50",
@@ -29,7 +29,7 @@ function getConfidenceBand(prob: number): {
     dot: "bg-amber-400",
   };
   if (prob >= 0.40) return {
-    label: "Inconclusive — Further Analysis Needed",
+    label: "Supporting Evidence Snapshot",
     color: "text-[#6b7280]",
     barColor: "bg-gray-400",
     bg: "bg-[#fafaf8]",
@@ -37,7 +37,7 @@ function getConfidenceBand(prob: number): {
     dot: "bg-gray-400",
   };
   return {
-    label: "Low Confidence — Likely Authentic",
+    label: "Supporting Evidence Snapshot",
     color: "text-emerald-700",
     barColor: "bg-emerald-500",
     bg: "bg-emerald-50",
@@ -54,17 +54,16 @@ export function NeuralModelVerdict({ ai }: Props) {
   const fusedProb = ai.ai_probability;
   const hasModel = modelProb !== null && !ai.model_error;
   const modelName = ai.model_name ?? "prithivMLmods/Deep-Fake-Detector-v2-Model";
-  const modelLabel = ai.model_label ?? "Unknown";
-  const source = ai.signal_source ?? "heuristic_fallback";
+  const modelLabel = ai.model_label ?? "Deepfake";
 
-  const displayProb = hasModel ? modelProb! : fusedProb;
+  const displayProb = fusedProb;
   const band = getConfidenceBand(displayProb);
-  const pct = Math.round(displayProb * 100);
+  const finalPct = Math.round(fusedProb * 100);
 
   return (
     <section className="mb-8">
       <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">
-        Neural Deepfake Classifier
+        Forensic Evidence Breakdown
       </p>
 
       <div className={`rounded-xl border ${band.border} overflow-hidden`}>
@@ -85,36 +84,19 @@ export function NeuralModelVerdict({ ai }: Props) {
         <div className="bg-white px-5 py-5">
           {hasModel ? (
             <>
-              {/* Big probability readout */}
-              <div className="flex items-end gap-3 mb-4">
-                <span className={`text-[48px] font-bold leading-none tracking-tight ${band.color}`}>
-                  {pct}%
-                </span>
-                <div className="pb-1.5">
-                  <p className="text-[12px] font-semibold text-[#0a0a0a]">
-                    {modelLabel === "Deepfake" ? "Deepfake probability" : "Realism probability (inverted)"}
-                  </p>
-                  <p className="text-[10.5px] text-[#9ca3af] font-mono">Neural model output</p>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="h-1.5 w-full bg-[#f0ede8] rounded-full overflow-hidden mb-5">
-                <div
-                  className={`h-full rounded-full transition-all ${band.barColor}`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+              <p className="text-[12px] text-[#6b7280] mb-4 leading-relaxed">
+                Supporting metrics used to compute the final risk score shown above.
+              </p>
 
               {/* Two-column breakdown */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
-                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-wider mb-1">Model verdict</p>
-                  <p className="text-[13px] font-semibold text-[#0a0a0a]">{modelLabel}</p>
-                  <p className="text-[11px] text-[#6b7280] font-mono mt-0.5">{Math.round(modelProb! * 100)}% confidence</p>
+                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-wider mb-1">Deepfake model score</p>
+                  <p className="text-[13px] font-semibold text-[#0a0a0a]">{Math.round(modelProb! * 100)}% ({modelLabel})</p>
+                  <p className="text-[11px] text-[#6b7280] font-mono mt-0.5">{modelName}</p>
                 </div>
                 <div className="rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
-                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-wider mb-1">Forensic signals</p>
+                  <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-wider mb-1">Forensic artifact score</p>
                   <p className="text-[13px] font-semibold text-[#0a0a0a]">
                     {Math.round(heuristicProb * 100)}% AI probability
                   </p>
@@ -122,13 +104,11 @@ export function NeuralModelVerdict({ ai }: Props) {
                 </div>
               </div>
 
-              {/* Fused score note */}
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-[10.5px] text-[#9ca3af] font-mono">
-                  Fused score: {Math.round(fusedProb * 100)}%
-                  &nbsp;·&nbsp;
-                  95% model weight + 5% forensic weight
-                </span>
+              {/* Fusion definition */}
+              <div className="mt-3 rounded-lg border border-[#e8e4de] bg-[#fafaf8] px-4 py-3">
+                <p className="text-[10px] font-mono text-[#9ca3af] uppercase tracking-wider mb-1">Final score composition</p>
+                <p className="text-[13px] font-semibold text-[#0a0a0a]">{finalPct}% final authenticity risk</p>
+                <p className="text-[11px] text-[#6b7280] font-mono mt-0.5">95% model weight + 5% forensic weight</p>
               </div>
             </>
           ) : (

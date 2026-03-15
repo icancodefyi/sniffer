@@ -68,6 +68,9 @@ function ImagePanel({
           }`}
           onClick={() => src && setOpen(true)}
         >
+          <span className="absolute top-2 left-2 bg-white/90 text-[#374151] text-[8.5px] font-mono px-2 py-0.5 rounded tracking-widest uppercase border border-[#e8e4de] z-10">
+            {label}
+          </span>
           {src ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -92,7 +95,7 @@ function ImagePanel({
                 <path d="M21 15l-5-5L5 21" />
               </svg>
               <p className="text-[9px] text-[#c4bdb5] font-mono uppercase tracking-widest">
-                {label === "No Reference" ? "Not provided" : "Not cached"}
+                {label === "Reference" ? "Not provided" : "Not cached"}
               </p>
             </div>
           )}
@@ -102,9 +105,6 @@ function ImagePanel({
             </span>
           )}
         </div>
-        <p className="text-[10px] font-mono text-[#9ca3af] mt-2 text-center uppercase tracking-widest">
-          {label}
-        </p>
       </div>
     </>
   );
@@ -113,20 +113,27 @@ function ImagePanel({
 export function ImageEvidence({ suspiciousImg, referenceImg, tamperHeatmap, compact }: Props) {
   const hasTamper = Boolean(tamperHeatmap);
   const panelHeight = compact ? "h-40" : "h-52";
+  const gridClass = hasTamper
+    ? compact
+      ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
+      : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+    : compact
+    ? "grid grid-cols-1 sm:grid-cols-2 gap-3"
+    : "grid grid-cols-1 sm:grid-cols-2 gap-3";
 
   return (
     <div>
       <p className="text-[10px] font-mono text-[#a8a29e] uppercase tracking-widest mb-3">Image Evidence</p>
       {hasTamper ? (
-        <div className="grid grid-cols-3 gap-3">
+        <div className={gridClass}>
           <ImagePanel src={suspiciousImg} label="Suspicious" height={panelHeight} />
-          <ImagePanel src={referenceImg} label={referenceImg ? "Reference" : "No Reference"} height={panelHeight} />
+          <ImagePanel src={referenceImg} label="Reference" height={panelHeight} />
           <ImagePanel src={tamperHeatmap!} label="Tamper Overlay" badge="HEATMAP" height={panelHeight} />
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3">
+        <div className={gridClass}>
           <ImagePanel src={suspiciousImg} label="Suspicious" height={panelHeight} />
-          <ImagePanel src={referenceImg} label={referenceImg ? "Reference" : "No Reference"} height={panelHeight} />
+          <ImagePanel src={referenceImg} label="Reference" height={panelHeight} />
         </div>
       )}
     </div>

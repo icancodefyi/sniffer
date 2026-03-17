@@ -149,7 +149,8 @@ def build_explanation(
         )
     else:
         parts.append(
-            "No Content Credentials (C2PA) provenance certificate is embedded in this image."
+            "No Content Credentials (C2PA) provenance certificate is embedded in this image. "
+            "Absence of provenance is treated as a risk signal because origin cannot be cryptographically verified."
         )
 
     # ── AI generation detection ────────────────────────────────────────────────

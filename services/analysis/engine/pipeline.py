@@ -175,7 +175,7 @@ def run_pipeline(
     # ── 12. Per-algorithm signal table ───────────────────────────────────────
     algorithm_signals: list[dict] = [
         {
-            "name": "Structural Similarity (SSIM)",
+            "name": "Reference Similarity (SSIM, reference-only)",
             "value": f"{ssim_score:.3f}" if has_ref else "N/A — no reference",
             "flagged": similarity.flagged if similarity else False,
             "weight": 0.30,
@@ -221,9 +221,9 @@ def run_pipeline(
                 "verified":      "Verified",
                 "trust_warning": "Verified (cert unanchored)",
                 "invalid":       "Invalid",
-                "not_present":   "Not Present",
+                "not_present":   "Not Present (risk signal)",
             }.get(c2pa_status_str, c2pa_status_str.replace("_", " ").title()),
-            "flagged": c2pa_status_str == "invalid",
+            "flagged": c2pa_status_str in ("invalid", "not_present"),
             "weight": 0.0,  # informational only — no score impact unless invalid
         },
         {

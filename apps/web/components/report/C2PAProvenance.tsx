@@ -43,15 +43,15 @@ const STATUS_CONFIG = {
     dot: "bg-red-500",
   },
   not_present: {
-    label: "Not Present",
-    badge: "bg-[#f5f5f4] text-[#9ca3af] border-[#e8e4de]",
+    label: "Not Present (Risk Signal)",
+    badge: "bg-amber-50 text-amber-700 border-amber-200",
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#9ca3af]">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         <line x1="12" y1="8" x2="12" y2="16" strokeDasharray="2 2" />
       </svg>
     ),
-    dot: "bg-[#d4cfc9]",
+    dot: "bg-amber-500",
   },
 } as const;
 
@@ -99,8 +99,8 @@ export function C2PAProvenance({ c2pa }: Props) {
             </span>
           )}
           {status === "not_present" && (
-            <span className="text-[11px] text-[#9ca3af]">
-              No Content Credentials embedded — common after social media upload (platforms strip manifests)
+            <span className="text-[11px] text-amber-700">
+              No Content Credentials embedded. This increases uncertainty because origin cannot be cryptographically verified.
             </span>
           )}
         </div>

@@ -89,6 +89,7 @@ import {
 import { buildCaseRef } from "./utils";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const FORCE_MOCK_LOOKUP = false;
 
 interface IntelligenceResult {
   domain: string;
@@ -191,6 +192,59 @@ const TARGET_STAGE_STYLES: Record<
     border: "border-rose-200",
   },
 };
+
+function buildMockLookup(domain: string): {
+  intel: IntelligenceResult;
+  takedown: TakedownResult;
+} {
+  const d = domain.toLowerCase();
+
+  const mockByDomain: Record<string, { network: string; removalPage: string; contact: string }> = {
+    "mydesi.ltd": {
+      network: "Self-hosted / private CDN",
+      removalPage: "https://mydesi.ltd/contact",
+      contact: "abuse@mydesi.ltd",
+    },
+    "fsiblog.pro": {
+      network: "Cloudflare",
+      removalPage: "https://fsiblog.pro/dmca",
+      contact: "abuse@fsiblog.pro",
+    },
+    "viralkand.com": {
+      network: "Cloudflare",
+      removalPage: "https://viralkand.com/contact",
+      contact: "abuse@viralkand.com",
+    },
+  };
+
+  const picked = mockByDomain[d] ?? {
+    network: "Unknown network",
+    removalPage: `https://${domain}/contact`,
+    contact: `abuse@${domain}`,
+  };
+
+  return {
+    intel: {
+      domain,
+      found: true,
+      cdn_provider: picked.network.includes("Cloudflare") ? "Cloudflare" : "Self or private CDN",
+      provider_type: picked.network.includes("Cloudflare") ? "global_cdn" : "self_or_private_cdn",
+      network: picked.network,
+      confidence: 0.96,
+      source: "dataset",
+    },
+    takedown: {
+      domain,
+      found: true,
+      removal_type: "form",
+      removal_page: picked.removalPage,
+      contact_email: picked.contact,
+      status: "verified",
+      confidence: 0.95,
+      source: "dataset",
+    },
+  };
+}
 
 function pushUnique(values: string[], value: string | null | undefined): void {
   if (!value) return;
@@ -343,6 +397,16 @@ export function LeakActionConsole({ caseId }: Props): JSX.Element {
       setLookupError(null);
       setIntel(null);
       setTakedown(null);
+
+      if (FORCE_MOCK_LOOKUP) {
+        const mock = buildMockLookup(selectedDomain);
+        if (!cancelled) {
+          setIntel(mock.intel);
+          setTakedown(mock.takedown);
+          setLookupLoading(false);
+        }
+        return;
+      }
 
       const [intelRes, takedownRes] = await Promise.allSettled([
         fetch(`/api/intelligence/${encodeURIComponent(selectedDomain)}`),

@@ -17,6 +17,7 @@ _W_KEYPOINT = 0.05
 _W_AI = 0.08              # AI generation detection — with reference
 _W_AI_NO_REF = 0.22       # raised weight; neural model is primary signal without reference
 _MODEL_HIGH_CONF = 0.80   # threshold: model is highly confident → relax no-ref floor
+_C2PA_ABSENCE_PENALTY = 6.0  # missing provenance is a non-neutral risk signal
 
 # ── Forensic certainty thresholds ────────────────────────────────────────────
 # Labels represent certainty that the image was manipulated.
@@ -95,6 +96,8 @@ def compute_score(
     # C2PA penalties
     if c2pa_status == "invalid":
         score -= 5.0  # cryptographic failure — tampered after signing
+    elif c2pa_status == "not_present":
+        score -= _C2PA_ABSENCE_PENALTY
     if c2pa_ai_generated and c2pa_status in ("verified", "trust_warning"):
         score -= 15.0  # manifest explicitly declares AI-generated content
 
